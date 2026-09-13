@@ -31,3 +31,7 @@ data/
 .env
 .env.*
 !.env.example
+
+# Machine-local Claude Code permissions; shared config in .claude/settings.json
+# is fine to commit.
+.claude/settings.local.json
