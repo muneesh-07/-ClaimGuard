@@ -4,10 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.stream.Collectors;
@@ -37,6 +40,33 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatus(ex.getStatusCode());
         problem.setTitle(ex.getStatusCode().toString());
         problem.setDetail(ex.getReason());
+        return problem;
+    }
+
+    /** A required actor header (X-Actor-Id / X-Actor-Role) was missing from a transition request. */
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ProblemDetail handleMissingHeader(MissingRequestHeaderException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setTitle("Missing required header");
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    /** X-Actor-Role (or another typed parameter) held a value that doesn't match its expected type, e.g. a role name that isn't ADJUSTER/INVESTIGATOR/SYSTEM. */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setTitle("Invalid parameter");
+        problem.setDetail(ex.getName() + ": '" + ex.getValue() + "' is not a valid value");
+        return problem;
+    }
+
+    /** The request body wasn't valid JSON, or held a value (e.g. an unknown ClaimStatus name) that couldn't be parsed into the target type. */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleMalformedBody(HttpMessageNotReadableException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setTitle("Malformed request body");
+        problem.setDetail(ex.getMostSpecificCause().getMessage());
         return problem;
     }
 
