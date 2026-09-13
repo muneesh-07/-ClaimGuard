@@ -41,7 +41,7 @@ public class Claim {
     @Column(nullable = false)
     private String policyNumber;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal claimAmount;
 
     @Column(nullable = false)
@@ -66,6 +66,11 @@ public class Claim {
 
     @Column(nullable = false)
     private Instant updatedAt;
+
+    // Optimistic locking: two adjusters acting on the same claim at once
+    // should get a conflict, not a silently lost update.
+    @Version
+    private Long version;
 
     @PrePersist
     protected void onCreate() {

@@ -2,55 +2,48 @@ package com.claimguard.controller;
 
 import com.claimguard.domain.Claim;
 import com.claimguard.dto.ClaimRequest;
-import com.claimguard.repository.ClaimRepository;
+import com.claimguard.dto.ClaimResponse;
+import com.claimguard.service.ClaimService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 
+import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 /**
- * Deliberately minimal for this step: create a claim, fetch a claim.
- * No workflow transitions, no fraud scoring, no Kafka events yet -
- * this step is only about proving Java <-> Postgres persistence works.
+ * Claim intake and read. No workflow transitions or fraud scoring yet -
+ * those land once the state machine and audit log (M3) and the Python
+ * scoring service (M5-M7) are wired up.
  */
 @RestController
 @RequestMapping("/api/claims")
 public class ClaimController {
 
-    private final ClaimRepository claimRepository;
+    private final ClaimService claimService;
 
-    public ClaimController(ClaimRepository claimRepository) {
-        this.claimRepository = claimRepository;
+    public ClaimController(ClaimService claimService) {
+        this.claimService = claimService;
     }
 
     @PostMapping
-    public ResponseEntity<Claim> createClaim(@Valid @RequestBody ClaimRequest request) {
-        Claim claim = Claim.builder()
-                .claimantName(request.claimantName())
-                .policyNumber(request.policyNumber())
-                .claimAmount(request.claimAmount())
-                .incidentDate(request.incidentDate())
-                .claimantPhone(request.claimantPhone())
-                .claimantAddress(request.claimantAddress())
-                .repairShopName(request.repairShopName())
-                .build();
-
-        Claim saved = claimRepository.save(claim);
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<ClaimResponse> createClaim(@Valid @RequestBody ClaimRequest request) {
+        Claim saved = claimService.createClaim(request);
+        return ResponseEntity
+                .created(URI.create("/api/claims/" + saved.getId()))
+                .body(ClaimResponse.from(saved));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Claim> getClaim(@PathVariable UUID id) {
-        Claim claim = claimRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Claim not found: " + id));
-        return ResponseEntity.ok(claim);
+    public ClaimResponse getClaim(@PathVariable UUID id) {
+        return ClaimResponse.from(claimService.getClaim(id));
     }
 
     @GetMapping
-    public ResponseEntity<Iterable<Claim>> listClaims() {
-        return ResponseEntity.ok(claimRepository.findAll());
+    public List<ClaimResponse> listClaims() {
+        return claimService.listClaims().stream()
+                .map(ClaimResponse::from)
+                .toList();
     }
 }
