@@ -51,7 +51,7 @@ deferred to M9 as a Python batch job, so it cannot block the spine.
 
 ---
 
-## M0 — Make it real · ~0.5 day
+## M0 — Make it real · ~0.5 day · **DONE**
 
 Nothing here is fraud detection. Do it anyway; everything else stands on it.
 
@@ -73,7 +73,7 @@ of what gets reviewed.
 
 ---
 
-## M1 — Foundations: migrations, service layer, errors, test harness · ~1.5 days
+## M1 — Foundations: migrations, service layer, errors, test harness · ~1.5 days · **DONE**
 
 - [ ] Add Flyway (`flyway-core` + `flyway-database-postgresql`)
 - [ ] `V1__claims.sql` — hand-write the DDL to match the current `Claim` entity

@@ -78,8 +78,8 @@ curl -X POST localhost:8080/api/claims \
 
 | | Milestone | State |
 |---|---|---|
-| M0 | Repo, build, toolchain | in progress |
-| M1 | Flyway, service layer, RFC 7807 errors, Testcontainers | not started |
+| M0 | Repo, build, toolchain | done |
+| M1 | Flyway, service layer, RFC 7807 errors, Testcontainers | done |
 | M2 | Entity resolution (phone, address, repair shop) | not started |
 | M3 | Workflow state machine + hash-chained audit log | not started |
 | M4 | Synthetic ring data with ground truth | not started |
