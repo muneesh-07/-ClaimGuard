@@ -8,7 +8,12 @@ services:
       POSTGRES_USER: claimguard
       POSTGRES_PASSWORD: claimguard_dev_password
     ports:
-      - "5432:5432"
+      # Published on 5434, not 5432: on this machine a native Postgres
+      # already owns 127.0.0.1:5432, and macOS resolves "localhost"
+      # there ahead of Docker's wildcard bind on the same port - so the
+      # app would silently connect to the wrong Postgres if we published
+      # on 5432 too.
+      - "5434:5432"
     volumes:
       - claimguard_pg_data:/var/lib/postgresql/data
     healthcheck:
