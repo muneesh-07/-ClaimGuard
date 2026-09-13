@@ -80,7 +80,7 @@ curl -X POST localhost:8080/api/claims \
 |---|---|---|
 | M0 | Repo, build, toolchain | done |
 | M1 | Flyway, service layer, RFC 7807 errors, Testcontainers | done |
-| M2 | Entity resolution (phone, address, repair shop) | not started |
+| M2 | Entity resolution (phone, address, repair shop) | done |
 | M3 | Workflow state machine + hash-chained audit log | not started |
 | M4 | Synthetic ring data with ground truth | not started |
 | M5 | Python scoring service + versioned contract | not started |

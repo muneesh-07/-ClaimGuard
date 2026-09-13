@@ -61,6 +61,13 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
+        <!-- Phone number parsing/normalization for entity resolution (M2) -->
+        <dependency>
+            <groupId>com.googlecode.libphonenumber</groupId>
+            <artifactId>libphonenumber</artifactId>
+            <version>8.13.55</version>
+        </dependency>
+
         <!-- Redis (used later for caching/session state) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

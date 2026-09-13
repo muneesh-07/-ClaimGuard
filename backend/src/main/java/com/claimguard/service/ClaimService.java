@@ -22,11 +22,14 @@ import java.util.UUID;
 public class ClaimService {
 
     private final ClaimRepository claimRepository;
+    private final EntityService entityService;
 
-    public ClaimService(ClaimRepository claimRepository) {
+    public ClaimService(ClaimRepository claimRepository, EntityService entityService) {
         this.claimRepository = claimRepository;
+        this.entityService = entityService;
     }
 
+    /** Persists a new claim and, in the same transaction, resolves and links the entities (phone/address/shop) it references - a claim never exists without its graph edges. */
     @Transactional
     public Claim createClaim(ClaimRequest request) {
         Claim claim = Claim.builder()
@@ -39,15 +42,19 @@ public class ClaimService {
                 .repairShopName(request.repairShopName())
                 .build();
 
-        return claimRepository.save(claim);
+        Claim saved = claimRepository.save(claim);
+        entityService.resolveAndLink(saved);
+        return saved;
     }
 
+    /** Fetches one claim by id, or a 404 ProblemDetail if it doesn't exist. */
     @Transactional(readOnly = true)
     public Claim getClaim(UUID id) {
         return claimRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Claim not found: " + id));
     }
 
+    /** Every claim in the system - fine at today's scale, will need pagination once volume grows. */
     @Transactional(readOnly = true)
     public List<Claim> listClaims() {
         return claimRepository.findAll();

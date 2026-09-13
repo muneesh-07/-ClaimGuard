@@ -34,6 +34,12 @@ management:
       exposure:
         include: health,info
 
+claimguard:
+  entity-resolution:
+    # Region used to interpret phone numbers with no country code, e.g.
+    # "9876500011" -> +919876500011. Change per deployment locale.
+    default-phone-region: IN
+
 # NOTE: Kafka and Redis connection config are intentionally left out of
 # this file for now. We'll add them once claim persistence + the
 # workflow states are working end to end.
