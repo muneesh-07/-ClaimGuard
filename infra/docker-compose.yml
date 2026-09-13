@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:17.2
+    container_name: claimguard-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: claimguard
+      POSTGRES_USER: claimguard
+      POSTGRES_PASSWORD: claimguard_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - claimguard_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U claimguard -d claimguard"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  claimguard_pg_data:
+
+# NOTE: Kafka and Redis will be added to this file in a later step.
+# Keeping it to just Postgres for now so we can confirm the DB
+# connection works before adding more moving parts.

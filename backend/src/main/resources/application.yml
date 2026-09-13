@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: claimguard-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/claimguard
+    username: claimguard
+    password: claimguard_dev_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # 'update' auto-creates/alters tables from our entities - fine for
+      # local dev on a solo/capstone project. We'd switch to Flyway/
+      # Liquibase migrations before anything resembling production.
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# NOTE: Kafka and Redis connection config are intentionally left out of
+# this file for now. We'll add them once claim persistence + the
+# workflow states are working end to end.
