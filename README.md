@@ -45,10 +45,6 @@ claimguard/
   being made on purpose.
 - **[docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md)** — milestones, checklists,
   and the acceptance test for each one.
-- **[docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md)** — a walkthrough of how a
-  claim actually flows through the system today, Spring Boot concepts
-  explained for newcomers to the framework, a file-by-file guide to the
-  codebase, and a commit-by-commit change log.
 
 ## Quick start
 
