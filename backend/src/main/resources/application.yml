@@ -3,22 +3,27 @@ spring:
     name: claimguard-backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/claimguard
+    # Port 5434, not 5432 - see infra/docker-compose.yml for why.
+    url: jdbc:postgresql://localhost:5434/claimguard
     username: claimguard
     password: claimguard_dev_password
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      # 'update' auto-creates/alters tables from our entities - fine for
-      # local dev on a solo/capstone project. We'd switch to Flyway/
-      # Liquibase migrations before anything resembling production.
-      ddl-auto: update
+      # Flyway (db/migration) owns every schema change now. 'validate' just
+      # confirms the entities and the migrations still agree on startup -
+      # if they don't, the app refuses to start instead of running on a
+      # schema nobody reviewed.
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         format_sql: true
     open-in-view: false
+
+  flyway:
+    locations: classpath:db/migration
 
 server:
   port: 8080
