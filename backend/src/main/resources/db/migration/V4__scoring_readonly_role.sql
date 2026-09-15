@@ -9,14 +9,21 @@
 -- POSTGRES_PASSWORD - not a real credential, same convention already in use
 -- for local development in this repo.
 
+-- current_database() rather than a hardcoded "claimguard": this migration
+-- also runs against Testcontainers' ephemeral Postgres in every
+-- integration test, which names its database "test", not "claimguard".
+-- A hardcoded name here broke every Testcontainers-based test the
+-- moment this migration was added - caught by actually running the
+-- full suite, not by inspection.
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'claimguard_scoring') THEN
         CREATE ROLE claimguard_scoring LOGIN PASSWORD 'claimguard_scoring_dev_password';
     END IF;
+
+    EXECUTE format('GRANT CONNECT ON DATABASE %I TO claimguard_scoring', current_database());
 END
 $$;
 
-GRANT CONNECT ON DATABASE claimguard TO claimguard_scoring;
 GRANT USAGE ON SCHEMA public TO claimguard_scoring;
 GRANT SELECT ON claims, entities, claim_entities TO claimguard_scoring;
