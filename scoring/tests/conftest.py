@@ -6,6 +6,11 @@ behaviour. Fixture setup/teardown uses the full read-write `claimguard`
 user (the scoring role can't insert its own test data, by design);
 the code under test always goes through the read-only `claimguard_scoring`
 role, exactly like it would in production.
+
+`refreshed_scoring_cache` is session-scoped deliberately: building the
+graph and running the full detector ladder over the real dev database
+(~51k claims as of M4) takes several seconds, so every test that needs
+scored data shares ONE refresh rather than paying that cost per test.
 """
 
 import os
@@ -14,7 +19,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, text
+from sqlalchemy import bindparam, create_engine, text
 
 from app.db import SessionLocal
 from app.main import app
@@ -66,41 +71,46 @@ def _link_entity(conn, claim_id, entity_id, canonical_phone):
     """), {"claim_id": str(claim_id), "entity_id": str(entity_id), "raw_value": canonical_phone})
 
 
-@pytest.fixture()
-def two_linked_claims(admin_engine):
-    """Two claims sharing one fresh, uniquely-generated phone entity -
-    isolated test data that can't collide with anything else in the dev database."""
-    claim_a = uuid.uuid4()
-    claim_b = uuid.uuid4()
+@pytest.fixture(scope="session")
+def small_ring_claim_ids(admin_engine):
+    """Three claims sharing one fresh, uniquely-generated, low-degree phone - a real ring
+    by the detector's own definition (min_ring_size=3), isolated from anything else in
+    the dev database. Session-scoped so this data exists before the one session-scoped
+    graph refresh below runs."""
+    claim_ids = [uuid.uuid4() for _ in range(3)]
     entity_id = uuid.uuid4()
     phone = f"+91{uuid.uuid4().int % 10_000_000_000:010d}"
 
     with admin_engine.begin() as conn:
-        _insert_claim(conn, claim_a, phone)
-        _insert_claim(conn, claim_b, phone)
-        _link_entity(conn, claim_a, entity_id, phone)
-        _link_entity(conn, claim_b, entity_id, phone)
+        for claim_id in claim_ids:
+            _insert_claim(conn, claim_id, phone)
+            _link_entity(conn, claim_id, entity_id, phone)
 
-    yield claim_a, claim_b
+    yield claim_ids
 
+    id_strings = [str(c) for c in claim_ids]
     with admin_engine.begin() as conn:
-        conn.execute(text("DELETE FROM claim_entities WHERE claim_id IN (:a, :b)"),
-                      {"a": str(claim_a), "b": str(claim_b)})
-        conn.execute(text("DELETE FROM claims WHERE id IN (:a, :b)"),
-                      {"a": str(claim_a), "b": str(claim_b)})
+        conn.execute(
+            text("DELETE FROM claim_entities WHERE claim_id IN :ids").bindparams(
+                bindparam("ids", expanding=True)),
+            {"ids": id_strings},
+        )
+        conn.execute(
+            text("DELETE FROM claims WHERE id IN :ids").bindparams(bindparam("ids", expanding=True)),
+            {"ids": id_strings},
+        )
         conn.execute(text("DELETE FROM entities WHERE id = :id"), {"id": str(entity_id)})
 
 
-@pytest.fixture()
-def unlinked_claim(admin_engine):
-    """One claim with no entity links at all - the score_claim(None) case."""
-    claim_id = uuid.uuid4()
-    phone = f"+91{uuid.uuid4().int % 10_000_000_000:010d}"
+@pytest.fixture(scope="session")
+def refreshed_scoring_cache(small_ring_claim_ids):
+    """Builds the graph and runs the full detector ladder ONCE for the whole test
+    session, after small_ring_claim_ids has inserted its fixture ring."""
+    from app.scoring import refresh
 
-    with admin_engine.begin() as conn:
-        _insert_claim(conn, claim_id, phone)
-
-    yield claim_id
-
-    with admin_engine.begin() as conn:
-        conn.execute(text("DELETE FROM claims WHERE id = :id"), {"id": str(claim_id)})
+    session = SessionLocal()
+    try:
+        refresh(session)
+    finally:
+        session.close()
+    return small_ring_claim_ids

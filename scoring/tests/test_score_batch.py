@@ -1,30 +1,29 @@
 import uuid
 
 
-def test_score_batch_scores_claims_that_exist(client, two_linked_claims):
-    claim_a, claim_b = two_linked_claims
+def test_score_batch_flags_a_real_planted_ring_through_the_api(client, refreshed_scoring_cache):
+    ring_claim_ids = refreshed_scoring_cache
 
-    response = client.post("/score/batch", json={"claim_ids": [str(claim_a), str(claim_b)]})
+    response = client.post("/score/batch", json={"claim_ids": [str(c) for c in ring_claim_ids]})
 
     assert response.status_code == 200
     body = response.json()
-    assert len(body["results"]) == 2
-    returned_ids = {r["claim_id"] for r in body["results"]}
-    assert returned_ids == {str(claim_a), str(claim_b)}
+    assert len(body["results"]) == 3
     for result in body["results"]:
-        assert result["model_version"] == "stub-component-size-0.1.0"
+        assert result["decision_hint"] == "FLAG"
+        assert result["model_version"] == "ring-detector-0.1.0"
 
 
-def test_score_batch_silently_skips_unknown_claim_ids(client, two_linked_claims):
-    claim_a, _ = two_linked_claims
+def test_score_batch_silently_skips_unknown_claim_ids(client, refreshed_scoring_cache):
+    ring_claim_ids = refreshed_scoring_cache
     unknown_id = str(uuid.uuid4())
 
-    response = client.post("/score/batch", json={"claim_ids": [str(claim_a), unknown_id]})
+    response = client.post("/score/batch", json={"claim_ids": [str(ring_claim_ids[0]), unknown_id]})
 
     assert response.status_code == 200
     body = response.json()
     assert len(body["results"]) == 1
-    assert body["results"][0]["claim_id"] == str(claim_a)
+    assert body["results"][0]["claim_id"] == str(ring_claim_ids[0])
 
 
 def test_score_batch_rejects_an_empty_request(client):
