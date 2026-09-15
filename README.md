@@ -83,7 +83,7 @@ curl -X POST localhost:8080/api/claims \
 | M2 | Entity resolution (phone, address, repair shop) | done |
 | M3 | Workflow state machine + hash-chained audit log | done |
 | M4 | Synthetic ring data with ground truth | done |
-| M5 | Python scoring service + versioned contract | not started |
+| M5 | Python scoring service + versioned contract | done |
 | M6 | Ring detector (k-core → Leiden → personalized PageRank) | not started |
 | M7 | Async scoring via transactional outbox + Kafka | not started |
 | M8 | RBAC — adjuster / investigator / auditor | not started |
