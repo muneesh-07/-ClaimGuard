@@ -22,9 +22,46 @@ services:
       timeout: 5s
       retries: 5
 
+  kafka:
+    # Official Apache Kafka image (3.7+) with native KRaft support - no
+    # ZooKeeper, single broker, per the M7 tripwire in
+    # docs/EXECUTION_PLAN.md: "do not spend a day on a ZooKeeper setup
+    # you don't need."
+    image: apache/kafka:3.9.0
+    container_name: claimguard-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CLUSTER_ID: ciWo7IWazngRchmPES6q5A==
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: claimguard-redis
+    restart: unless-stopped
+    ports:
+      # Published on 6380, not 6379: same reason as Postgres's 5434 -
+      # something on this machine already owns 6379.
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   claimguard_pg_data:
-
-# NOTE: Kafka and Redis will be added to this file in a later step.
-# Keeping it to just Postgres for now so we can confirm the DB
-# connection works before adding more moving parts.

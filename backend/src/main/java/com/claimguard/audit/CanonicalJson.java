@@ -31,4 +31,22 @@ public final class CanonicalJson {
             throw new IllegalStateException("Failed to canonicalize audit row for hashing", e);
         }
     }
+
+    /**
+     * Parses a JSON string into a generic object tree (nested Maps/Lists/
+     * primitives) so it can be embedded as a field and canonicalized
+     * recursively by {@link #canonicalize}, instead of being hashed as a
+     * raw string. Required for any field backed by a Postgres {@code jsonb}
+     * column: JSONB re-serializes on every read (different whitespace,
+     * possibly different formatting) - hashing the raw text would make
+     * verify() recompute a different hash for an unchanged value the
+     * moment it round-trips through the database once.
+     */
+    public static Object parse(String json) {
+        try {
+            return MAPPER.readValue(json, Object.class);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to parse JSON for canonicalization", e);
+        }
+    }
 }

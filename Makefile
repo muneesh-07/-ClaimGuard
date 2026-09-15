@@ -4,13 +4,13 @@ MVN     := cd backend && ./mvnw
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs ps build test run clean gen-data load-bulk score-serve eval
+.PHONY: help up down logs ps build test run clean gen-data load-bulk score-serve score-consume eval
 
 help: ## Show this help
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
 	  | awk -F':.*?## ' '{printf "  \033[36m%-8s\033[0m %s\n", $$1, $$2}'
 
-up: ## Start infrastructure (Postgres, later Kafka + Redis)
+up: ## Start infrastructure (Postgres, Kafka, Redis)
 	$(COMPOSE) up -d
 	$(COMPOSE) ps
 
@@ -43,6 +43,9 @@ load-bulk: ## Bulk-load data/claims.csv via COPY, then resolve entities (needs `
 
 score-serve: ## Start the Python scoring service on :8000 (needs `make up` first)
 	cd scoring && uv run uvicorn app.main:app --port 8000
+
+score-consume: ## Start the Kafka consumer that scores claims automatically (needs `make up` first)
+	cd scoring && uv run python consumer.py
 
 eval: ## Evaluate the ring detector against tools/gen_rings.py's ground truth (needs `make up` first)
 	cd scoring && uv run python ../tools/eval.py

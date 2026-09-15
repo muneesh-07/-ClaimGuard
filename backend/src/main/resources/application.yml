@@ -25,6 +25,28 @@ spring:
   flyway:
     locations: classpath:db/migration
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    # Plain string (de)serializers on both key and value - JSON is
+    # handled by hand (ObjectMapper) at the edges instead of Spring
+    # Kafka's JsonSerializer, which stamps Java-type headers a Python
+    # consumer has no use for. Keeping both sides of the topic contract
+    # to plain, portable JSON strings.
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: claimguard-backend
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  data:
+    redis:
+      host: localhost
+      # Port 6380, not 6379 - see infra/docker-compose.yml for why.
+      port: 6380
+
 server:
   port: 8080
 
@@ -39,7 +61,3 @@ claimguard:
     # Region used to interpret phone numbers with no country code, e.g.
     # "9876500011" -> +919876500011. Change per deployment locale.
     default-phone-region: IN
-
-# NOTE: Kafka and Redis connection config are intentionally left out of
-# this file for now. We'll add them once claim persistence + the
-# workflow states are working end to end.

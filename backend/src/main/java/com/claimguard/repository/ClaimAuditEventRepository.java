@@ -1,5 +1,6 @@
 package com.claimguard.repository;
 
+import com.claimguard.domain.AuditEventType;
 import com.claimguard.domain.ClaimAuditEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -14,4 +15,13 @@ public interface ClaimAuditEventRepository extends JpaRepository<ClaimAuditEvent
 
     /** The full chain for a claim, oldest first, for display and for chain verification. */
     List<ClaimAuditEvent> findByClaimIdOrderBySeq(UUID claimId);
+
+    /**
+     * Backs the claim.scored consumer's idempotency check: has this
+     * exact (claim, model version) score already been recorded? Mirrors
+     * the database-enforced unique index in V5__outbox.sql - this is
+     * the fast, proactive check; the index is the guarantee if a race
+     * ever slips past it.
+     */
+    boolean existsByClaimIdAndModelVersionAndEventType(UUID claimId, String modelVersion, AuditEventType eventType);
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -147,9 +148,24 @@ public class AuditService {
         fields.put("actorId", actorId);
         fields.put("actorRole", actorRole.name());
         fields.put("reason", reason);
-        fields.put("fraudScore", fraudScore == null ? null : fraudScore.toPlainString());
+        // Fixed scale (4), matching the fraud_score NUMERIC(5,4) column, BEFORE
+        // toPlainString(): append() hashes whatever scale the caller's BigDecimal
+        // happened to carry (e.g. "0.0" from a JSON value with one decimal digit),
+        // but Postgres normalizes the stored value to the column's declared scale,
+        // so verify() re-reading the row later saw "0.0000" and produced a
+        // different hash for an unchanged value. Caught by actually running the
+        // Kafka scoring pipeline and calling /audit/verify on the result - the
+        // exact "fixed numeric scale" tripwire named in docs/EXECUTION_PLAN.md M3.
+        fields.put("fraudScore", fraudScore == null ? null : fraudScore.setScale(4, RoundingMode.HALF_UP).toPlainString());
         fields.put("ringId", ringId);
-        fields.put("explanationJson", explanationJson);
+        // Parsed, not the raw string: explanationJson is stored in a Postgres jsonb
+        // column, which re-serializes on every read (different whitespace, possibly
+        // different formatting) - hashing the raw text would make verify() recompute
+        // a different hash for an unchanged value the moment it round-trips through
+        // the database once. Parsing first lets canonicalize() re-derive a stable
+        // form from the actual content, the same way it already does for this
+        // method's top-level fields.
+        fields.put("explanationJson", explanationJson == null ? null : CanonicalJson.parse(explanationJson));
         fields.put("modelVersion", modelVersion);
         fields.put("occurredAt", occurredAt.toString());
         fields.put("prevHash", prevHash);
