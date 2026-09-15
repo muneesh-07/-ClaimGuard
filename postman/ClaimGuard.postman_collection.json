@@ -1,0 +1,1189 @@
+{
+  "info": {
+    "name": "ClaimGuard API",
+    "description": "Real request/response examples captured from a live run of the ClaimGuard backend (M0-M4). Each saved example is genuine output, not a mock. Set the `baseUrl` collection variable if the backend isn't on localhost:8080, and run `make up run` first for the live requests to actually succeed (the saved examples work standalone).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "M1 - Claim intake, RFC 7807 errors",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/health",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "health"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"UP\",\n  \"timestamp\": \"2026-09-15T11:59:26.234790Z\",\n  \"service\": \"claimguard-backend\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create claim A (Asha Menon)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claimantName\": \"Asha Menon\",\n  \"policyNumber\": \"POL-50001\",\n  \"claimAmount\": 45000,\n  \"incidentDate\": \"2026-08-14\",\n  \"claimantPhone\": \"+91-9876500011\",\n  \"claimantAddress\": \"12 Lake View Road, Coimbatore\",\n  \"repairShopName\": \"SpeedFix Auto Works\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"claimantName\": \"Asha Menon\",\n  \"policyNumber\": \"POL-50001\",\n  \"claimAmount\": 45000,\n  \"incidentDate\": \"2026-08-14\",\n  \"claimantPhone\": \"+91-9876500011\",\n  \"claimantAddress\": \"12 Lake View Road, Coimbatore\",\n  \"repairShopName\": \"SpeedFix Auto Works\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"a968470f-000a-4f95-8a76-d246a2c91622\",\n  \"claimantName\": \"Asha Menon\",\n  \"policyNumber\": \"POL-50001\",\n  \"claimAmount\": 45000,\n  \"incidentDate\": \"2026-08-14\",\n  \"claimantPhone\": \"+91-9876500011\",\n  \"claimantAddress\": \"12 Lake View Road, Coimbatore\",\n  \"repairShopName\": \"SpeedFix Auto Works\",\n  \"status\": \"SUBMITTED\",\n  \"createdAt\": \"2026-09-15T11:59:37.052769Z\",\n  \"updatedAt\": \"2026-09-15T11:59:37.052769Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create claim B - same phone, different format",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claimantName\": \"Rahul Verma\",\n  \"policyNumber\": \"POL-50002\",\n  \"claimAmount\": 38000,\n  \"incidentDate\": \"2026-08-20\",\n  \"claimantPhone\": \"9876500011\",\n  \"claimantAddress\": \"45 Marina Street, Chennai\",\n  \"repairShopName\": \"Metro Motors\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"claimantName\": \"Rahul Verma\",\n  \"policyNumber\": \"POL-50002\",\n  \"claimAmount\": 38000,\n  \"incidentDate\": \"2026-08-20\",\n  \"claimantPhone\": \"9876500011\",\n  \"claimantAddress\": \"45 Marina Street, Chennai\",\n  \"repairShopName\": \"Metro Motors\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"e426125d-4be6-4965-926a-49ee22179b65\",\n  \"claimantName\": \"Rahul Verma\",\n  \"policyNumber\": \"POL-50002\",\n  \"claimAmount\": 38000,\n  \"incidentDate\": \"2026-08-20\",\n  \"claimantPhone\": \"9876500011\",\n  \"claimantAddress\": \"45 Marina Street, Chennai\",\n  \"repairShopName\": \"Metro Motors\",\n  \"status\": \"SUBMITTED\",\n  \"createdAt\": \"2026-09-15T11:59:49.734970Z\",\n  \"updatedAt\": \"2026-09-15T11:59:49.734970Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create claim C - same phone, yet another format",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claimantName\": \"Kavya Iyer\",\n  \"policyNumber\": \"POL-50003\",\n  \"claimAmount\": 52000,\n  \"incidentDate\": \"2026-08-25\",\n  \"claimantPhone\": \"+91 98765 00011\",\n  \"claimantAddress\": \"7 Temple Cross, Madurai\",\n  \"repairShopName\": \"Star Auto Works\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"claimantName\": \"Kavya Iyer\",\n  \"policyNumber\": \"POL-50003\",\n  \"claimAmount\": 52000,\n  \"incidentDate\": \"2026-08-25\",\n  \"claimantPhone\": \"+91 98765 00011\",\n  \"claimantAddress\": \"7 Temple Cross, Madurai\",\n  \"repairShopName\": \"Star Auto Works\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"e19ed5a5-7fe4-4f30-aff3-faf1c400b037\",\n  \"claimantName\": \"Kavya Iyer\",\n  \"policyNumber\": \"POL-50003\",\n  \"claimAmount\": 52000,\n  \"incidentDate\": \"2026-08-25\",\n  \"claimantPhone\": \"+91 98765 00011\",\n  \"claimantAddress\": \"7 Temple Cross, Madurai\",\n  \"repairShopName\": \"Star Auto Works\",\n  \"status\": \"SUBMITTED\",\n  \"createdAt\": \"2026-09-15T11:59:49.912200Z\",\n  \"updatedAt\": \"2026-09-15T11:59:49.912200Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get claim by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/a968470f-000a-4f95-8a76-d246a2c91622",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "a968470f-000a-4f95-8a76-d246a2c91622"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims/a968470f-000a-4f95-8a76-d246a2c91622",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims",
+                    "a968470f-000a-4f95-8a76-d246a2c91622"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"a968470f-000a-4f95-8a76-d246a2c91622\",\n  \"claimantName\": \"Asha Menon\",\n  \"policyNumber\": \"POL-50001\",\n  \"claimAmount\": 45000,\n  \"incidentDate\": \"2026-08-14\",\n  \"claimantPhone\": \"+91-9876500011\",\n  \"claimantAddress\": \"12 Lake View Road, Coimbatore\",\n  \"repairShopName\": \"SpeedFix Auto Works\",\n  \"status\": \"SUBMITTED\",\n  \"createdAt\": \"2026-09-15T11:59:37.052769Z\",\n  \"updatedAt\": \"2026-09-15T11:59:37.052769Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List all claims",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create claim - validation error (blank name)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claimantName\": \"\",\n  \"policyNumber\": \"POL-50004\",\n  \"claimAmount\": 1000,\n  \"incidentDate\": \"2026-01-01\",\n  \"claimantPhone\": \"+919876500099\",\n  \"claimantAddress\": \"1 Any Street\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "400 Bad Request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"claimantName\": \"\",\n  \"policyNumber\": \"POL-50004\",\n  \"claimAmount\": 1000,\n  \"incidentDate\": \"2026-01-01\",\n  \"claimantPhone\": \"+919876500099\",\n  \"claimantAddress\": \"1 Any Street\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"type\": \"about:blank\",\n  \"title\": \"Validation failed\",\n  \"status\": 400,\n  \"detail\": \"claimantName: must not be blank\",\n  \"instance\": \"/api/claims\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get claim - not found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims/00000000-0000-0000-0000-000000000000",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims",
+                    "00000000-0000-0000-0000-000000000000"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"type\": \"about:blank\",\n  \"title\": \"404 NOT_FOUND\",\n  \"status\": 404,\n  \"detail\": \"Claim not found: 00000000-0000-0000-0000-000000000000\",\n  \"instance\": \"/api/claims/00000000-0000-0000-0000-000000000000\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "M2 - Entity resolution",
+      "item": [
+        {
+          "name": "Get all claims sharing an entity (the shared phone)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/entities/36d8a752-cd4c-476f-aa3b-1680805f6ac2/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "entities",
+                "36d8a752-cd4c-476f-aa3b-1680805f6ac2",
+                "claims"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - 4 claims share this one phone entity",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/entities/36d8a752-cd4c-476f-aa3b-1680805f6ac2/claims",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "entities",
+                    "36d8a752-cd4c-476f-aa3b-1680805f6ac2",
+                    "claims"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"a578ef4a-fe19-4da1-a388-8802713277c8\",\n    \"claimantName\": \"Asha Menon\",\n    \"policyNumber\": \"POL-10021\",\n    \"claimAmount\": 45000.0,\n    \"incidentDate\": \"2026-08-14\",\n    \"claimantPhone\": \"+91-9876500011\",\n    \"claimantAddress\": \"12 Lake View Road, Coimbatore\",\n    \"repairShopName\": \"SpeedFix Auto Works\",\n    \"status\": \"SUBMITTED\",\n    \"createdAt\": \"2026-09-13T09:12:58.535597Z\",\n    \"updatedAt\": \"2026-09-13T09:12:58.535597Z\"\n  },\n  {\n    \"id\": \"a968470f-000a-4f95-8a76-d246a2c91622\",\n    \"claimantName\": \"Asha Menon\",\n    \"policyNumber\": \"POL-50001\",\n    \"claimAmount\": 45000,\n    \"incidentDate\": \"2026-08-14\",\n    \"claimantPhone\": \"+91-9876500011\",\n    \"claimantAddress\": \"12 Lake View Road, Coimbatore\",\n    \"repairShopName\": \"SpeedFix Auto Works\",\n    \"status\": \"SUBMITTED\",\n    \"createdAt\": \"2026-09-15T11:59:37.052769Z\",\n    \"updatedAt\": \"2026-09-15T11:59:37.052769Z\"\n  },\n  {\n    \"id\": \"e426125d-4be6-4965-926a-49ee22179b65\",\n    \"claimantName\": \"Rahul Verma\",\n    \"policyNumber\": \"POL-50002\",\n    \"claimAmount\": 38000.0,\n    \"incidentDate\": \"2026-08-20\",\n    \"claimantPhone\": \"9876500011\",\n    \"claimantAddress\": \"45 Marina Street, Chennai\",\n    \"repairShopName\": \"Metro Motors\",\n    \"status\": \"SUBMITTED\",\n    \"createdAt\": \"2026-09-15T11:59:49.734970Z\",\n    \"updatedAt\": \"2026-09-15T11:59:49.734970Z\"\n  },\n  {\n    \"id\": \"e19ed5a5-7fe4-4f30-aff3-faf1c400b037\",\n    \"claimantName\": \"Kavya Iyer\",\n    \"policyNumber\": \"POL-50003\",\n    \"claimAmount\": 52000.0,\n    \"incidentDate\": \"2026-08-25\",\n    \"claimantPhone\": \"+91 98765 00011\",\n    \"claimantAddress\": \"7 Temple Cross, Madurai\",\n    \"repairShopName\": \"Star Auto Works\",\n    \"status\": \"SUBMITTED\",\n    \"createdAt\": \"2026-09-15T11:59:49.912200Z\",\n    \"updatedAt\": \"2026-09-15T11:59:49.912200Z\"\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "M3 - Workflow state machine + hash-chained audit log",
+      "item": [
+        {
+          "name": "Legal transition: SUBMITTED -> UNDER_REVIEW (ADJUSTER)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Actor-Id",
+                "value": "adjuster.priya"
+              },
+              {
+                "key": "X-Actor-Role",
+                "value": "ADJUSTER"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/a968470f-000a-4f95-8a76-d246a2c91622/transitions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "a968470f-000a-4f95-8a76-d246a2c91622",
+                "transitions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toStatus\": \"UNDER_REVIEW\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Actor-Id",
+                    "value": "adjuster.priya"
+                  },
+                  {
+                    "key": "X-Actor-Role",
+                    "value": "ADJUSTER"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims/a968470f-000a-4f95-8a76-d246a2c91622/transitions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims",
+                    "a968470f-000a-4f95-8a76-d246a2c91622",
+                    "transitions"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"toStatus\": \"UNDER_REVIEW\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"a968470f-000a-4f95-8a76-d246a2c91622\",\n  \"claimantName\": \"Asha Menon\",\n  \"policyNumber\": \"POL-50001\",\n  \"claimAmount\": 45000,\n  \"incidentDate\": \"2026-08-14\",\n  \"claimantPhone\": \"+91-9876500011\",\n  \"claimantAddress\": \"12 Lake View Road, Coimbatore\",\n  \"repairShopName\": \"SpeedFix Auto Works\",\n  \"status\": \"UNDER_REVIEW\",\n  \"createdAt\": \"2026-09-15T11:59:37.052769Z\",\n  \"updatedAt\": \"2026-09-15T12:00:16.324564Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get audit trail for a claim",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/a968470f-000a-4f95-8a76-d246a2c91622/audit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "a968470f-000a-4f95-8a76-d246a2c91622",
+                "audit"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - hash-chained events",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims/a968470f-000a-4f95-8a76-d246a2c91622/audit",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims",
+                    "a968470f-000a-4f95-8a76-d246a2c91622",
+                    "audit"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"26cfd4be-6a26-4853-a86f-e18198de5153\",\n    \"claimId\": \"a968470f-000a-4f95-8a76-d246a2c91622\",\n    \"seq\": 1,\n    \"eventType\": \"CLAIM_CREATED\",\n    \"fromStatus\": null,\n    \"toStatus\": \"SUBMITTED\",\n    \"actorId\": \"intake-system\",\n    \"actorRole\": \"SYSTEM\",\n    \"reason\": null,\n    \"fraudScore\": null,\n    \"ringId\": null,\n    \"modelVersion\": null,\n    \"occurredAt\": \"2026-09-15T11:59:37.187Z\",\n    \"prevHash\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n    \"hash\": \"ded7f3ca93d9349d3ae2d0a9d5a87a1e91a88c4898073c48c00da14e63d47004\"\n  },\n  {\n    \"id\": \"44c9ef20-7c03-42ed-86fd-4f91df613e99\",\n    \"claimId\": \"a968470f-000a-4f95-8a76-d246a2c91622\",\n    \"seq\": 2,\n    \"eventType\": \"STATUS_CHANGED\",\n    \"fromStatus\": \"SUBMITTED\",\n    \"toStatus\": \"UNDER_REVIEW\",\n    \"actorId\": \"adjuster.priya\",\n    \"actorRole\": \"ADJUSTER\",\n    \"reason\": null,\n    \"fraudScore\": null,\n    \"ringId\": null,\n    \"modelVersion\": null,\n    \"occurredAt\": \"2026-09-15T12:00:16.323Z\",\n    \"prevHash\": \"ded7f3ca93d9349d3ae2d0a9d5a87a1e91a88c4898073c48c00da14e63d47004\",\n    \"hash\": \"66a4bc35e000590dcf225ebd0d050c2bed2e6130439a82bbdc8e981b5e082b19\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Verify the audit hash chain is intact",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/a968470f-000a-4f95-8a76-d246a2c91622/audit/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "a968470f-000a-4f95-8a76-d246a2c91622",
+                "audit",
+                "verify"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims/a968470f-000a-4f95-8a76-d246a2c91622/audit/verify",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims",
+                    "a968470f-000a-4f95-8a76-d246a2c91622",
+                    "audit",
+                    "verify"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"valid\": true,\n  \"events\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Illegal transition: SUBMITTED -> APPROVED directly",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Actor-Id",
+                "value": "adjuster.priya"
+              },
+              {
+                "key": "X-Actor-Role",
+                "value": "ADJUSTER"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/e426125d-4be6-4965-926a-49ee22179b65/transitions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "e426125d-4be6-4965-926a-49ee22179b65",
+                "transitions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toStatus\": \"APPROVED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "409 Conflict",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Actor-Id",
+                    "value": "adjuster.priya"
+                  },
+                  {
+                    "key": "X-Actor-Role",
+                    "value": "ADJUSTER"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims/e426125d-4be6-4965-926a-49ee22179b65/transitions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims",
+                    "e426125d-4be6-4965-926a-49ee22179b65",
+                    "transitions"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"toStatus\": \"APPROVED\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"type\": \"about:blank\",\n  \"title\": \"409 CONFLICT\",\n  \"status\": 409,\n  \"detail\": \"Cannot transition claim from SUBMITTED to APPROVED as ADJUSTER\",\n  \"instance\": \"/api/claims/e426125d-4be6-4965-926a-49ee22179b65/transitions\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Flag a claim (as the fraud model would)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Actor-Id",
+                "value": "fraud-model"
+              },
+              {
+                "key": "X-Actor-Role",
+                "value": "SYSTEM"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/e19ed5a5-7fe4-4f30-aff3-faf1c400b037/transitions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "e19ed5a5-7fe4-4f30-aff3-faf1c400b037",
+                "transitions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toStatus\": \"FLAGGED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Actor-Id",
+                    "value": "fraud-model"
+                  },
+                  {
+                    "key": "X-Actor-Role",
+                    "value": "SYSTEM"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims/e19ed5a5-7fe4-4f30-aff3-faf1c400b037/transitions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims",
+                    "e19ed5a5-7fe4-4f30-aff3-faf1c400b037",
+                    "transitions"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"toStatus\": \"FLAGGED\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"a968470f-000a-4f95-8a76-d246a2c91622\",\n  \"claimantName\": \"Asha Menon\",\n  \"policyNumber\": \"POL-50001\",\n  \"claimAmount\": 45000,\n  \"incidentDate\": \"2026-08-14\",\n  \"claimantPhone\": \"+91-9876500011\",\n  \"claimantAddress\": \"12 Lake View Road, Coimbatore\",\n  \"repairShopName\": \"SpeedFix Auto Works\",\n  \"status\": \"SUBMITTED\",\n  \"createdAt\": \"2026-09-15T11:59:37.052769Z\",\n  \"updatedAt\": \"2026-09-15T11:59:37.052769Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Override a fraud flag WITHOUT a reason - rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Actor-Id",
+                "value": "investigator.rao"
+              },
+              {
+                "key": "X-Actor-Role",
+                "value": "INVESTIGATOR"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/e19ed5a5-7fe4-4f30-aff3-faf1c400b037/transitions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "e19ed5a5-7fe4-4f30-aff3-faf1c400b037",
+                "transitions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toStatus\": \"APPROVED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "400 Bad Request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Actor-Id",
+                    "value": "investigator.rao"
+                  },
+                  {
+                    "key": "X-Actor-Role",
+                    "value": "INVESTIGATOR"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims/e19ed5a5-7fe4-4f30-aff3-faf1c400b037/transitions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims",
+                    "e19ed5a5-7fe4-4f30-aff3-faf1c400b037",
+                    "transitions"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"toStatus\": \"APPROVED\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"type\": \"about:blank\",\n  \"title\": \"400 BAD_REQUEST\",\n  \"status\": 400,\n  \"detail\": \"A reason is required to override FLAGGED -> APPROVED\",\n  \"instance\": \"/api/claims/e19ed5a5-7fe4-4f30-aff3-faf1c400b037/transitions\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Override a fraud flag WITH a reason - succeeds (HUMAN_OVERRIDE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Actor-Id",
+                "value": "investigator.rao"
+              },
+              {
+                "key": "X-Actor-Role",
+                "value": "INVESTIGATOR"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/e19ed5a5-7fe4-4f30-aff3-faf1c400b037/transitions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "e19ed5a5-7fe4-4f30-aff3-faf1c400b037",
+                "transitions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toStatus\": \"APPROVED\",\n  \"reason\": \"Investigated - shared phone was a family member, not fraud\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Actor-Id",
+                    "value": "investigator.rao"
+                  },
+                  {
+                    "key": "X-Actor-Role",
+                    "value": "INVESTIGATOR"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/claims/e19ed5a5-7fe4-4f30-aff3-faf1c400b037/transitions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "claims",
+                    "e19ed5a5-7fe4-4f30-aff3-faf1c400b037",
+                    "transitions"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"toStatus\": \"APPROVED\",\n  \"reason\": \"Investigated - shared phone was a family member, not fraud\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"e19ed5a5-7fe4-4f30-aff3-faf1c400b037\",\n  \"claimantName\": \"Kavya Iyer\",\n  \"policyNumber\": \"POL-50003\",\n  \"claimAmount\": 52000.0,\n  \"incidentDate\": \"2026-08-25\",\n  \"claimantPhone\": \"+91 98765 00011\",\n  \"claimantAddress\": \"7 Temple Cross, Madurai\",\n  \"repairShopName\": \"Star Auto Works\",\n  \"status\": \"APPROVED\",\n  \"createdAt\": \"2026-09-15T11:59:49.912200Z\",\n  \"updatedAt\": \"2026-09-15T12:00:57.152449Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "M4 - Bulk data loading backlog resolution",
+      "item": [
+        {
+          "name": "Resolve entities for bulk-loaded claims (idempotent)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/entities/resolve-backlog",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "entities",
+                "resolve-backlog"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - one unresolved claim found and resolved",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/entities/resolve-backlog",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "entities",
+                    "resolve-backlog"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"claimsResolved\": 1\n}"
+            },
+            {
+              "name": "200 OK - running again is a no-op",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/entities/resolve-backlog",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "entities",
+                    "resolve-backlog"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"claimsResolved\": 0\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
