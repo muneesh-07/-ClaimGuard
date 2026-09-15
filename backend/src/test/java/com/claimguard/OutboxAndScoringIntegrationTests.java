@@ -32,7 +32,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * side owns once a message has been produced or is about to be sent.
  */
 @Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "claimguard.outbox.publisher.enabled=false")
 class OutboxAndScoringIntegrationTests {
 
     @Container

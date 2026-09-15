@@ -61,3 +61,10 @@ claimguard:
     # Region used to interpret phone numbers with no country code, e.g.
     # "9876500011" -> +919876500011. Change per deployment locale.
     default-phone-region: IN
+
+  jwt:
+    # Dev-only signing secret, committed in plaintext - same convention
+    # already in use for the dev DB password in this file. Must be at
+    # least 256 bits (32 ASCII chars) for HS256, or JJWT refuses to sign.
+    secret: "claimguard-dev-only-jwt-signing-secret-not-for-production-use"
+    expiration-minutes: 60

@@ -86,7 +86,7 @@ curl -X POST localhost:8080/api/claims \
 | M5 | Python scoring service + versioned contract | done |
 | M6 | Ring detector (k-core → Leiden → personalized PageRank) | done |
 | M7 | Async scoring via transactional outbox + Kafka | done |
-| M8 | RBAC — adjuster / investigator / auditor | not started |
+| M8 | RBAC — adjuster / investigator / auditor | done |
 | M9 | Evaluation, efficiency benchmarks, final README | not started |
 | M10 | Ring visualisation | optional |
 

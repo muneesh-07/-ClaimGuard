@@ -7,7 +7,6 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -43,16 +42,7 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    /** A required actor header (X-Actor-Id / X-Actor-Role) was missing from a transition request. */
-    @ExceptionHandler(MissingRequestHeaderException.class)
-    public ProblemDetail handleMissingHeader(MissingRequestHeaderException ex) {
-        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        problem.setTitle("Missing required header");
-        problem.setDetail(ex.getMessage());
-        return problem;
-    }
-
-    /** X-Actor-Role (or another typed parameter) held a value that doesn't match its expected type, e.g. a role name that isn't ADJUSTER/INVESTIGATOR/SYSTEM. */
+    /** A typed request parameter held a value that doesn't match its expected type, e.g. a malformed UUID path variable. */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);

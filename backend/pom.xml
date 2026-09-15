@@ -61,6 +61,30 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
+        <!-- Authentication/authorization (M8): password hashing, the security
+             filter chain, and JWT issuance/verification for the stateless API. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Phone number parsing/normalization for entity resolution (M2) -->
         <dependency>
             <groupId>com.googlecode.libphonenumber</groupId>

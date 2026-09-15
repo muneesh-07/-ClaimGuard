@@ -27,7 +27,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * the context fails to start and every test here fails with it.
  */
 @Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "claimguard.outbox.publisher.enabled=false")
 class ClaimLifecycleTests {
 
     @Container

@@ -45,6 +45,20 @@ public final class ClaimTransitions {
     private ClaimTransitions() {
     }
 
+    /**
+     * Whether this (from, to) pair is a legal transition for ANY role -
+     * i.e. whether it's in the map at all. Kept separate from
+     * {@link #isAllowed} so a caller can tell "no such transition
+     * exists, for anyone" (a 409 - the request doesn't make sense) apart
+     * from "this transition exists, but not for this actor's role" (a
+     * 403 - an authorization failure). Conflating the two into one
+     * boolean is exactly what made every role-mismatch look identical
+     * to a structurally-nonexistent transition before M8.
+     */
+    public static boolean isDefined(ClaimStatus from, ClaimStatus to) {
+        return ALLOWED_ROLES.containsKey(new Transition(from, to));
+    }
+
     /** Whether the given actor role is allowed to move a claim from one status directly to another. */
     public static boolean isAllowed(ClaimStatus from, ClaimStatus to, ActorRole actorRole) {
         Set<ActorRole> roles = ALLOWED_ROLES.get(new Transition(from, to));

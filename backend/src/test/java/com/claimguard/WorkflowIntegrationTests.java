@@ -1,10 +1,15 @@
 package com.claimguard;
 
+import com.claimguard.domain.ClaimStatus;
 import com.claimguard.dto.AuditEventResponse;
 import com.claimguard.dto.AuditVerificationResponse;
 import com.claimguard.dto.ClaimRequest;
 import com.claimguard.dto.ClaimResponse;
+import com.claimguard.dto.LoginRequest;
+import com.claimguard.dto.LoginResponse;
 import com.claimguard.dto.TransitionRequest;
+import com.claimguard.security.DemoUserSeeder;
+import com.claimguard.service.ClaimService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +17,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -32,10 +38,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * docs/EXECUTION_PLAN.md: illegal transition -> 409, a fraud-flag
  * override without a reason -> 400, the chain verifies once a claim has
  * moved through a few states, and a raw SQL UPDATE against
- * claim_audit_events fails at the database.
+ * claim_audit_events fails at the database. Human-actor transitions go
+ * through real login (M8) rather than the old X-Actor-Id/X-Actor-Role
+ * header stub; getting a claim into FLAGGED (the SYSTEM-only transition
+ * that in production happens via the M7 Kafka pipeline, not this HTTP
+ * endpoint) uses ClaimService.applyScore() directly, the same way
+ * OutboxAndScoringIntegrationTests does.
  */
 @Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "claimguard.outbox.publisher.enabled=false")
 class WorkflowIntegrationTests {
 
     @Container
@@ -47,6 +60,9 @@ class WorkflowIntegrationTests {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private ClaimService claimService;
 
     private UUID createClaim() {
         ClaimRequest request = new ClaimRequest(
@@ -63,16 +79,25 @@ class WorkflowIntegrationTests {
         return response.getBody().id();
     }
 
-    private ResponseEntity<ClaimResponse> transition(UUID claimId, String toStatus, String reason,
-                                                       String actorId, String actorRole) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Actor-Id", actorId);
-        headers.set("X-Actor-Role", actorRole);
-        HttpEntity<TransitionRequest> entity = new HttpEntity<>(
-                new TransitionRequest(com.claimguard.domain.ClaimStatus.valueOf(toStatus), reason), headers);
+    private String loginAndGetToken(String username) {
+        ResponseEntity<LoginResponse> response = rest.postForEntity(
+                "/api/auth/login", new LoginRequest(username, DemoUserSeeder.DEMO_PASSWORD), LoginResponse.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        return response.getBody().token();
+    }
 
-        return rest.exchange("/api/claims/{id}/transitions", org.springframework.http.HttpMethod.POST,
-                entity, ClaimResponse.class, claimId);
+    private <T> ResponseEntity<T> transitionAs(UUID claimId, ClaimStatus toStatus, String reason,
+                                                String username, Class<T> responseType) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(loginAndGetToken(username));
+        HttpEntity<TransitionRequest> entity = new HttpEntity<>(new TransitionRequest(toStatus, reason), headers);
+        return rest.exchange("/api/claims/{id}/transitions", HttpMethod.POST, entity, responseType, claimId);
+    }
+
+    /** Flags a claim the way M7's Kafka pipeline actually does in production - not through the human-facing HTTP endpoint, which SYSTEM can't authenticate against. */
+    private void flagClaim(UUID claimId) {
+        claimService.applyScore(claimId, new BigDecimal("0.9000"), "FLAG", "test-ring",
+                null, "test-model-workflow");
     }
 
     @Test
@@ -91,7 +116,8 @@ class WorkflowIntegrationTests {
     void aLegalTransitionSucceedsAndTheChainVerifies() {
         UUID claimId = createClaim();
 
-        ResponseEntity<ClaimResponse> response = transition(claimId, "UNDER_REVIEW", null, "adjuster-1", "ADJUSTER");
+        ResponseEntity<ClaimResponse> response =
+                transitionAs(claimId, ClaimStatus.UNDER_REVIEW, null, "adjuster1", ClaimResponse.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().status().name()).isEqualTo("UNDER_REVIEW");
 
@@ -106,27 +132,32 @@ class WorkflowIntegrationTests {
     void anIllegalTransitionIsRejectedWithConflict() {
         UUID claimId = createClaim();
 
-        ResponseEntity<ProblemDetail> response = rest.exchange(
-                "/api/claims/{id}/transitions", org.springframework.http.HttpMethod.POST,
-                new HttpEntity<>(new TransitionRequest(com.claimguard.domain.ClaimStatus.APPROVED, null),
-                        headersFor("adjuster-1", "ADJUSTER")),
-                ProblemDetail.class, claimId);
+        ResponseEntity<ProblemDetail> response =
+                transitionAs(claimId, ClaimStatus.APPROVED, null, "adjuster1", ProblemDetail.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
     }
 
     @Test
+    void aRoleMismatchedTransitionIsRejectedWithForbidden() {
+        UUID claimId = createClaim();
+        flagClaim(claimId);
+
+        // FLAGGED -> APPROVED exists in the transition table, but only for INVESTIGATOR -
+        // an ADJUSTER attempting it is an authorization failure (403), not "no such transition" (409).
+        ResponseEntity<ProblemDetail> response = transitionAs(
+                claimId, ClaimStatus.APPROVED, "trying anyway", "adjuster1", ProblemDetail.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
     void overridingAFraudFlagWithoutAReasonIsRejected() {
         UUID claimId = createClaim();
-        // SUBMITTED -> FLAGGED as SYSTEM, then try to clear it as an override without a reason.
-        assertThat(transition(claimId, "FLAGGED", null, "fraud-model", "SYSTEM").getStatusCode())
-                .isEqualTo(HttpStatus.OK);
+        flagClaim(claimId);
 
-        ResponseEntity<ProblemDetail> response = rest.exchange(
-                "/api/claims/{id}/transitions", org.springframework.http.HttpMethod.POST,
-                new HttpEntity<>(new TransitionRequest(com.claimguard.domain.ClaimStatus.APPROVED, null),
-                        headersFor("investigator-1", "INVESTIGATOR")),
-                ProblemDetail.class, claimId);
+        ResponseEntity<ProblemDetail> response =
+                transitionAs(claimId, ClaimStatus.APPROVED, null, "investigator1", ProblemDetail.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -134,10 +165,10 @@ class WorkflowIntegrationTests {
     @Test
     void overridingAFraudFlagWithAReasonSucceedsAndIsRecordedAsHumanOverride() {
         UUID claimId = createClaim();
-        transition(claimId, "FLAGGED", null, "fraud-model", "SYSTEM");
+        flagClaim(claimId);
 
-        ResponseEntity<ClaimResponse> response = transition(
-                claimId, "APPROVED", "Investigated - shared shop was coincidental, not fraud", "investigator-1", "INVESTIGATOR");
+        ResponseEntity<ClaimResponse> response = transitionAs(claimId, ClaimStatus.APPROVED,
+                "Investigated - shared shop was coincidental, not fraud", "investigator1", ClaimResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().status().name()).isEqualTo("APPROVED");
@@ -147,6 +178,7 @@ class WorkflowIntegrationTests {
         AuditEventResponse last = audit.getBody()[audit.getBody().length - 1];
         assertThat(last.eventType().name()).isEqualTo("HUMAN_OVERRIDE");
         assertThat(last.reason()).isNotBlank();
+        assertThat(last.actorId()).isEqualTo("investigator1");
     }
 
     @Test
@@ -156,12 +188,5 @@ class WorkflowIntegrationTests {
         assertThatThrownBy(() -> jdbcTemplate.update(
                 "UPDATE claim_audit_events SET reason = 'tampered' WHERE claim_id = ?", claimId))
                 .hasMessageContaining("append-only");
-    }
-
-    private HttpHeaders headersFor(String actorId, String actorRole) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Actor-Id", actorId);
-        headers.set("X-Actor-Role", actorRole);
-        return headers;
     }
 }

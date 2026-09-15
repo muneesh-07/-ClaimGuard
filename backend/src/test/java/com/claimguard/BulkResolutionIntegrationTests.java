@@ -30,7 +30,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * one-off pass that catches those claims up.
  */
 @Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "claimguard.outbox.publisher.enabled=false")
 class BulkResolutionIntegrationTests {
 
     @Container

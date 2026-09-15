@@ -28,7 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * claims endpoint must return all three claims.
  */
 @Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "claimguard.outbox.publisher.enabled=false")
 class EntityResolutionIntegrationTests {
 
     @Container

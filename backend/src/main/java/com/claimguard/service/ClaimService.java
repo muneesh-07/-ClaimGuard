@@ -83,6 +83,15 @@ public class ClaimService {
      * a reason was given. Locks the claim row for the whole transaction
      * so a concurrent transition on the same claim can't interleave and
      * fork the audit hash chain.
+     * <p>
+     * Two distinct failure modes, two distinct statuses (M8): a
+     * transition that doesn't exist for ANY role (e.g. skipping review
+     * entirely) is a 409 - the request doesn't make sense regardless of
+     * who's asking. A transition that exists but not for this actor's
+     * role (e.g. an ADJUSTER trying to clear a fraud flag) is a 403 -
+     * an authorization failure. Conflating these into one CONFLICT
+     * response, as this method did before M8, made "wrong role" and
+     * "no such transition" indistinguishable to a caller.
      */
     @Transactional
     public Claim transitionStatus(UUID claimId, ClaimStatus toStatus, String reason,
@@ -91,9 +100,13 @@ public class ClaimService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Claim not found: " + claimId));
 
         ClaimStatus fromStatus = claim.getStatus();
-        if (!ClaimTransitions.isAllowed(fromStatus, toStatus, actorRole)) {
+        if (!ClaimTransitions.isDefined(fromStatus, toStatus)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Cannot transition claim from " + fromStatus + " to " + toStatus + " as " + actorRole);
+                    "No such transition: " + fromStatus + " -> " + toStatus);
+        }
+        if (!ClaimTransitions.isAllowed(fromStatus, toStatus, actorRole)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    actorRole + " may not perform " + fromStatus + " -> " + toStatus);
         }
         boolean isOverride = ClaimTransitions.requiresReason(fromStatus, toStatus);
         if (isOverride && (reason == null || reason.isBlank())) {
