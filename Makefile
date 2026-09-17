@@ -4,7 +4,7 @@ MVN     := cd backend && ./mvnw
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs ps build test run clean gen-data load-bulk score-serve score-consume eval
+.PHONY: help up down logs ps build test run clean gen-data load-bulk score-serve score-consume eval bench-incremental frontend train-model
 
 help: ## Show this help
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -49,3 +49,12 @@ score-consume: ## Start the Kafka consumer that scores claims automatically (nee
 
 eval: ## Evaluate the ring detector against tools/gen_rings.py's ground truth (needs `make up` first)
 	cd scoring && uv run python ../tools/eval.py
+
+train-model: ## Train the Tier 1 XGBoost ring classifier + ablation report (needs `make up` first)
+	cd scoring && uv run python ../tools/train_model.py
+
+bench-incremental: ## Benchmark local-push PPR vs. a full graph rebuild at increasing scale (in-memory, no infra needed)
+	cd scoring && uv run python ../tools/benchmark_incremental.py
+
+frontend: ## Serve the minimal frontend on :5500 (needs the backend running for it to do anything)
+	cd frontend && python3 -m http.server 5500

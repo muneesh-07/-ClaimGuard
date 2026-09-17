@@ -8,11 +8,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -55,17 +53,11 @@ public class OutboxPublisher {
             try {
                 kafkaTemplate.send(event.getTopic(), event.getAggregateId().toString(), event.getPayload())
                         .get(5, TimeUnit.SECONDS);
-                markSent(event.getId());
+                outboxEventRepository.markSent(event.getId(), Instant.now());
             } catch (Exception e) {
                 log.warn("Failed to publish outbox event {} to {} - will retry next poll",
                         event.getId(), event.getTopic(), e);
             }
         }
-    }
-
-    /** Stamps one outbox row as sent, in its own short transaction so a slow Kafka send never holds a DB transaction open. */
-    @Transactional
-    void markSent(UUID eventId) {
-        outboxEventRepository.findById(eventId).ifPresent(event -> event.markSent(Instant.now()));
     }
 }

@@ -178,4 +178,36 @@ class OutboxAndScoringIntegrationTests {
 
         assertThat(auditService.verify(claim.getId())).isTrue();
     }
+
+    /**
+     * Regression test for a real bug found by actually running the full live stack (not
+     * by any prior unit or integration test): OutboxPublisher.publishPending() used to
+     * mark a row sent by calling a private @Transactional method on itself
+     * (markSent(event.getId())) - a same-class ("self-invocation") call that bypasses
+     * Spring's transactional proxy entirely, so the mutation was never flushed. Kafka
+     * delivery still succeeded every time, so the bug was invisible to anything that only
+     * checks "did the message arrive" - it only shows up as sent_at staying NULL forever,
+     * which made the SAME outbox row get republished on every 2-second poll indefinitely.
+     * This calls the repository's markSent(id, sentAt) directly, the way the fixed
+     * OutboxPublisher now does, and proves the row actually leaves the unsent set -
+     * confirmed to fail (row still present) against the pre-fix code, which called
+     * findById().ifPresent(event -> event.markSent(...)) with no repository-level write.
+     */
+    @Test
+    void markSentActuallyRemovesTheRowFromThePendingSet() {
+        Claim claim = createClaim();
+        OutboxEvent pending = outboxEventRepository.findBySentAtIsNullOrderByCreatedAtAsc().stream()
+                .filter(e -> e.getAggregateId().equals(claim.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No outbox row for claim " + claim.getId()));
+
+        outboxEventRepository.markSent(pending.getId(), java.time.Instant.now());
+
+        boolean stillPending = outboxEventRepository.findBySentAtIsNullOrderByCreatedAtAsc().stream()
+                .anyMatch(e -> e.getId().equals(pending.getId()));
+        assertThat(stillPending).isFalse();
+
+        OutboxEvent reloaded = outboxEventRepository.findById(pending.getId()).orElseThrow();
+        assertThat(reloaded.getSentAt()).isNotNull();
+    }
 }
