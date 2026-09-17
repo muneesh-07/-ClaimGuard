@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ClaimGuard</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">CG</span>
+    <span class="brand-name">ClaimGuard</span>
+  </div>
+  <div id="session-info" class="session-info hidden">
+    <button id="model-info-btn" class="btn-ghost">Model &amp; Evaluation</button>
+    <span id="session-user"></span>
+    <button id="logout-btn" class="btn-ghost">Sign out</button>
+  </div>
+</header>
+
+<div id="model-panel-backdrop" class="model-panel-backdrop hidden">
+  <div class="model-panel">
+    <div class="model-panel-header">
+      <h2>Model &amp; Evaluation</h2>
+      <button id="model-panel-close" class="btn-ghost">Close</button>
+    </div>
+    <div id="model-panel-body" class="model-panel-body">
+      <p class="muted">Loading&hellip;</p>
+    </div>
+  </div>
+</div>
+
+<main id="login-view" class="login-view">
+  <form id="login-form" class="login-card">
+    <h1>Sign in</h1>
+    <p class="muted">Demo accounts, seeded automatically on backend startup.</p>
+
+    <label for="username">Username</label>
+    <select id="username" name="username">
+      <option value="investigator1">investigator1 — INVESTIGATOR</option>
+      <option value="adjuster1">adjuster1 — ADJUSTER</option>
+      <option value="auditor1">auditor1 — AUDITOR</option>
+    </select>
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" value="changeme123" autocomplete="current-password" />
+
+    <button type="submit" class="btn-primary">Sign in</button>
+    <p id="login-error" class="error-text hidden"></p>
+  </form>
+</main>
+
+<main id="app-view" class="app-view hidden">
+
+  <section class="panel intake-panel">
+    <h2>Submit a claim</h2>
+    <form id="claim-form">
+      <label for="claimantName">Claimant name</label>
+      <input id="claimantName" required value="Demo Claimant" />
+
+      <label for="policyNumber">Policy number</label>
+      <input id="policyNumber" required value="POL-DEMO-001" />
+
+      <div class="field-row">
+        <div>
+          <label for="claimAmount">Claim amount</label>
+          <input id="claimAmount" type="number" step="0.01" required value="65000" />
+        </div>
+        <div>
+          <label for="incidentDate">Incident date</label>
+          <input id="incidentDate" type="date" required />
+        </div>
+      </div>
+
+      <label for="claimantPhone">Claimant phone</label>
+      <input id="claimantPhone" required placeholder="+91XXXXXXXXXX" />
+      <div class="prefill-row">
+        <button type="button" id="prefill-ring-btn" class="btn-link">Use a phone number from a real planted ring</button>
+        <button type="button" id="prefill-clean-btn" class="btn-link">Use a fresh, unlinked phone number</button>
+      </div>
+
+      <label for="claimantAddress">Claimant address</label>
+      <input id="claimantAddress" required value="1 Demo Lane, Chennai" />
+
+      <label for="repairShopName">Repair shop</label>
+      <input id="repairShopName" required value="Metro Motors" />
+
+      <button type="submit" class="btn-primary full-width">Submit claim</button>
+      <p id="claim-form-error" class="error-text hidden"></p>
+    </form>
+
+    <div class="session-list">
+      <h3>This session</h3>
+      <ul id="session-claims-list" class="claims-list"></ul>
+    </div>
+  </section>
+
+  <section class="panel detail-panel">
+    <div id="empty-state" class="empty-state">
+      <p>Submit a claim, or pick one from this session, to see it here.</p>
+    </div>
+
+    <div id="claim-detail" class="claim-detail hidden">
+      <div class="detail-header">
+        <div>
+          <h2 id="detail-claimant"></h2>
+          <p class="muted" id="detail-policy"></p>
+        </div>
+        <span id="status-badge" class="status-badge"></span>
+      </div>
+
+      <dl class="detail-grid">
+        <div><dt>Amount</dt><dd id="detail-amount"></dd></div>
+        <div><dt>Incident date</dt><dd id="detail-date"></dd></div>
+        <div><dt>Phone</dt><dd id="detail-phone" class="mono"></dd></div>
+        <div><dt>Address</dt><dd id="detail-address"></dd></div>
+        <div><dt>Repair shop</dt><dd id="detail-shop"></dd></div>
+        <div><dt>Claim ID</dt><dd id="detail-id" class="mono"></dd></div>
+      </dl>
+
+      <p id="polling-note" class="polling-note hidden">
+        <span class="spinner"></span> Waiting for the async fraud-detection pipeline to score this claim&hellip;
+      </p>
+
+      <div id="actions-section" class="actions-section">
+        <h3>Workflow actions</h3>
+        <div id="actions-buttons" class="actions-buttons"></div>
+        <div id="reason-field" class="reason-field hidden">
+          <label for="reason-input">Reason (required to override a fraud flag)</label>
+          <input id="reason-input" placeholder="e.g. Manually verified, false positive" />
+        </div>
+        <p id="action-error" class="error-text hidden"></p>
+      </div>
+
+      <div class="audit-section">
+        <div class="audit-header">
+          <h3>Audit trail</h3>
+          <button id="verify-btn" class="btn-ghost">Verify hash chain</button>
+          <span id="verify-result" class="verify-result"></span>
+        </div>
+        <ol id="audit-timeline" class="audit-timeline"></ol>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>Synthetic data — no real claimants. Talks directly to a local ClaimGuard backend at <code>localhost:8080</code>.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

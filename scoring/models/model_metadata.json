@@ -1,0 +1,44 @@
+{
+  "model_version": "xgboost-ring-classifier-1.0.0",
+  "trained_at": "2026-09-17T16:13:05.076797+00:00",
+  "features": [
+    "claim_amount",
+    "day_of_week",
+    "is_weekend",
+    "entity_degree_min",
+    "entity_degree_mean",
+    "entity_degree_max",
+    "idf_weighted_degree",
+    "one_hop_entity_count",
+    "two_hop_claim_count",
+    "claimants_per_entity_1hop",
+    "claimants_per_entity_2hop",
+    "burstiness_2hop",
+    "component_size",
+    "leiden_community_size",
+    "leiden_suspiciousness",
+    "ppr_score"
+  ],
+  "tabular_features": [
+    "claim_amount",
+    "day_of_week",
+    "is_weekend"
+  ],
+  "graph_features": [
+    "entity_degree_min",
+    "entity_degree_mean",
+    "entity_degree_max",
+    "idf_weighted_degree",
+    "one_hop_entity_count",
+    "two_hop_claim_count",
+    "claimants_per_entity_1hop",
+    "claimants_per_entity_2hop",
+    "burstiness_2hop",
+    "component_size",
+    "leiden_community_size",
+    "leiden_suspiciousness",
+    "ppr_score"
+  ],
+  "flag_threshold": 0.26,
+  "review_threshold": 0.01
+}

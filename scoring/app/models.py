@@ -34,7 +34,19 @@ class RingMetricEvidence(BaseModel):
     baseline: float
 
 
-Evidence = SharedEntityEvidence | RingMetricEvidence
+class FeatureContributionEvidence(BaseModel):
+    """One piece of evidence: how much one feature's SHAP value pushed the Tier 1
+    model's score up or down for this specific claim - a real, per-prediction
+    attribution from tools/train_model.py's trained classifier, not a hand-written
+    explanation string. Positive shap_value pushed the score toward FLAG."""
+
+    type: Literal["FEATURE_CONTRIBUTION"] = "FEATURE_CONTRIBUTION"
+    feature: str
+    feature_value: float
+    shap_value: float
+
+
+Evidence = SharedEntityEvidence | RingMetricEvidence | FeatureContributionEvidence
 
 
 class Thresholds(BaseModel):

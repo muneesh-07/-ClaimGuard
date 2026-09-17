@@ -14,6 +14,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 /**
  * The security filter chain. Scope is deliberately narrow, per
@@ -51,6 +56,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(problemDetailEntryPoint()))
                 .authorizeHttpRequests(auth -> auth
@@ -58,6 +64,29 @@ public class SecurityConfig {
                         .anyRequest().permitAll())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    /**
+     * Lets the browser-based frontend (frontend/, served locally on its own
+     * origin/port - a file:// page or a different port both count as a
+     * different origin from the backend's :8080) actually call this API.
+     * Without an explicit CORS policy, Spring Security silently fails every
+     * preflighted request (anything sending an Authorization header) from a
+     * browser with no CORS-related error in this app's own logs - only in
+     * the browser console, which makes it easy to mistake for a broken
+     * frontend rather than a missing backend config. Scoped to localhost
+     * origins only, since this is a local dev/demo frontend, not a public one.
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     /** A missing/invalid bearer token on a protected endpoint returns the same RFC 7807 ProblemDetail shape as every other error in this API, not Spring Security's default plain-text 401. */

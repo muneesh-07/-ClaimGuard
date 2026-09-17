@@ -8,20 +8,57 @@ generator's test suite never needs a pip install either. Run with:
 
 import random
 import unittest
+from datetime import date
 
 import gen_rings
 
 
 class MakeRingTests(unittest.TestCase):
 
-    # A ring's members must all share exactly one phone number - that's the fixed part of the fingerprint.
-    def test_all_members_share_one_phone(self):
+    # With fuzzing off, every member must still share exactly one phone number - the
+    # pre-fuzzing behavior must remain reachable, not just the fuzzy default.
+    def test_all_members_share_one_phone_when_fuzz_rate_is_zero(self):
         rng = random.Random(1)
-        members, shared_phone, _, _ = gen_rings.make_ring(rng, "ring-0000", size=6)
+        members, shared_phone, _, _ = gen_rings.make_ring(rng, "ring-0000", size=6, fuzz_rate=0.0)
 
         self.assertEqual(len(members), 6)
         self.assertTrue(all(m.claimant_phone == shared_phone for m in members))
         self.assertTrue(all(m.ring_id == "ring-0000" for m in members))
+
+    # The first member always keeps the exact shared phone (an exact-match anchor for the
+    # ring), even at a high fuzz rate - otherwise a ring could end up with NO two members
+    # sharing anything at all, which wouldn't be a ring by this project's own definition.
+    def test_first_member_always_keeps_the_exact_shared_phone(self):
+        rng = random.Random(7)
+        members, shared_phone, _, _ = gen_rings.make_ring(rng, "ring-0002", size=6, fuzz_rate=1.0)
+
+        self.assertEqual(members[0].claimant_phone, shared_phone)
+
+    # A high fuzz rate must actually produce at least one member whose phone differs from
+    # the shared one - otherwise fuzz_rate would be a parameter that does nothing.
+    def test_high_fuzz_rate_produces_phone_variants(self):
+        rng = random.Random(8)
+        members, shared_phone, _, _ = gen_rings.make_ring(rng, "ring-0003", size=10, fuzz_rate=1.0)
+
+        variant_phones = [m.claimant_phone for m in members[1:] if m.claimant_phone != shared_phone]
+        self.assertGreater(len(variant_phones), 0)
+        # A fuzzed phone must still be a same-length, same-leading-digit, PARSEABLE
+        # number - it's meant to simulate a typo, not corrupt the field into garbage.
+        for phone in variant_phones:
+            self.assertEqual(len(phone), len(shared_phone))
+            self.assertEqual(phone[:4], shared_phone[:4])
+            self.assertNotEqual(phone, shared_phone)
+
+    # date_range must actually constrain every member's incident_date - this is the
+    # mechanism the held-out ring-injection ablation depends on entirely.
+    def test_date_range_confines_every_members_incident_date(self):
+        rng = random.Random(9)
+        members, _, _, _ = gen_rings.make_ring(rng, "ring-0004", size=8, date_range=(200, 240))
+
+        for m in members:
+            offset_days = (date.fromisoformat(m.incident_date) - gen_rings.EPOCH).days
+            self.assertGreaterEqual(offset_days, 200)
+            self.assertLessEqual(offset_days, 240)
 
     # Every member of a ring must still be a distinct claimant, not a duplicated identity.
     def test_members_have_distinct_identities(self):
@@ -32,6 +69,54 @@ class MakeRingTests(unittest.TestCase):
         names = {m.claimant_name for m in members}
         self.assertEqual(len(claim_ids), 8)
         self.assertGreater(len(names), 1, "a ring of 8 with only one distinct name is suspicious even for a test")
+
+
+class FuzzPhoneTypoTests(unittest.TestCase):
+
+    # A transposition must never touch the leading digit (index 3, right after "+91") -
+    # that digit has to stay in 6-9 for the result to still be a valid Indian mobile number.
+    def test_leading_digit_after_country_code_is_never_touched(self):
+        rng = random.Random(10)
+        phone = "+919876500011"
+        for _ in range(50):
+            fuzzed = gen_rings.fuzz_phone_typo(rng, phone)
+            self.assertEqual(fuzzed[3], phone[3])
+            self.assertEqual(len(fuzzed), len(phone))
+
+
+class FuzzAddressVariantTests(unittest.TestCase):
+
+    # A known city alias must be substitutable - this is the specific gap
+    # AddressNormalizer's exact-match tokenizer cannot close on its own.
+    def test_can_substitute_a_known_city_alias(self):
+        rng = random.Random(11)
+        address = "12 Lake View Road, Bengaluru"
+        results = {gen_rings.fuzz_address_variant(rng, address) for _ in range(30)}
+        self.assertIn("12 Lake View Road, Bangalore", results)
+
+    # An address with no fuzzable city or street name must be returned unchanged, not
+    # mangled into something implausible.
+    def test_address_with_nothing_fuzzable_is_unchanged(self):
+        rng = random.Random(12)
+        address = "45 MG Road, Chennai"
+        self.assertEqual(gen_rings.fuzz_address_variant(rng, address), address)
+
+
+class FuzzShopVariantTests(unittest.TestCase):
+
+    # A known suffix spacing variant must be substitutable - the specific gap
+    # ShopNormalizer's own docstring names as deliberately unclosed.
+    def test_can_substitute_a_known_suffix_spacing_variant(self):
+        rng = random.Random(13)
+        shop = "SpeedFix Auto Works"
+        results = {gen_rings.fuzz_shop_variant(rng, shop) for _ in range(30)}
+        self.assertIn("SpeedFix Autoworks", results)
+
+    # A shop name with no fuzzable suffix must be returned unchanged.
+    def test_shop_with_nothing_fuzzable_is_unchanged(self):
+        rng = random.Random(14)
+        shop = "Royal Motors"
+        self.assertEqual(gen_rings.fuzz_shop_variant(rng, shop), shop)
 
 
 class CamouflageTests(unittest.TestCase):

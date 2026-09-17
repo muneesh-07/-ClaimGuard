@@ -23,6 +23,7 @@ public record AuditEventResponse(
         BigDecimal fraudScore,
         String ringId,
         String modelVersion,
+        String explanationJson,
         Instant occurredAt,
         String prevHash,
         String hash
@@ -41,6 +42,7 @@ public record AuditEventResponse(
                 event.getFraudScore(),
                 event.getRingId(),
                 event.getModelVersion(),
+                event.getExplanationJson(),
                 event.getOccurredAt(),
                 event.getPrevHash(),
                 event.getHash()

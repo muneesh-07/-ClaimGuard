@@ -1,0 +1,92 @@
+{
+  "model_version": "xgboost-ring-classifier-1.0.0",
+  "ablation": {
+    "tabular_only": {
+      "auprc": 0.0338,
+      "flag_threshold": 0.72,
+      "review_threshold": 0.04,
+      "confusion_matrix": {
+        "tp": 16,
+        "fp": 445,
+        "fn": 334,
+        "tn": 9438
+      },
+      "precision_recall_at_k": {
+        "50": {
+          "precision": 0.02,
+          "recall": 0.0029
+        },
+        "100": {
+          "precision": 0.02,
+          "recall": 0.0057
+        },
+        "500": {
+          "precision": 0.036,
+          "recall": 0.0514
+        }
+      }
+    },
+    "plus_graph_features": {
+      "auprc": 0.8907,
+      "flag_threshold": 0.92,
+      "review_threshold": 0.01,
+      "confusion_matrix": {
+        "tp": 299,
+        "fp": 3,
+        "fn": 51,
+        "tn": 9880
+      },
+      "precision_recall_at_k": {
+        "50": {
+          "precision": 1.0,
+          "recall": 0.1429
+        },
+        "100": {
+          "precision": 1.0,
+          "recall": 0.2857
+        },
+        "500": {
+          "precision": 0.616,
+          "recall": 0.88
+        }
+      }
+    },
+    "plus_calibration": {
+      "auprc": 0.8868,
+      "flag_threshold": 0.26,
+      "review_threshold": 0.01,
+      "confusion_matrix": {
+        "tp": 299,
+        "fp": 5,
+        "fn": 51,
+        "tn": 9878
+      },
+      "precision_recall_at_k": {
+        "50": {
+          "precision": 1.0,
+          "recall": 0.1429
+        },
+        "100": {
+          "precision": 1.0,
+          "recall": 0.2857
+        },
+        "500": {
+          "precision": 0.618,
+          "recall": 0.8829
+        }
+      }
+    }
+  },
+  "ring_injection_ablation": {
+    "held_out_claims": 157,
+    "held_out_rings": 20,
+    "tabular_only": {
+      "recall_at_own_threshold": 0.0573,
+      "mean_score": 0.3739
+    },
+    "plus_graph_features": {
+      "recall_at_own_threshold": 0.8726,
+      "mean_score": 0.8823
+    }
+  }
+}

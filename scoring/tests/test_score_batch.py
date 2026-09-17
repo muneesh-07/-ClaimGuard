@@ -11,7 +11,11 @@ def test_score_batch_flags_a_real_planted_ring_through_the_api(client, refreshed
     assert len(body["results"]) == 3
     for result in body["results"]:
         assert result["decision_hint"] == "FLAG"
-        assert result["model_version"] == "ring-detector-0.1.0"
+        # Whichever scoring method produced this (rule-based rungs or the Tier 1 trained
+        # model), a FLAG decision must be internally consistent with the flag_at threshold
+        # the SAME response reports - not a specific score, which is method-dependent.
+        assert result["fraud_score"] >= result["explanation"]["thresholds"]["flag_at"]
+        assert result["model_version"]
 
 
 def test_score_batch_silently_skips_unknown_claim_ids(client, refreshed_scoring_cache):
