@@ -1,10 +1,12 @@
 package com.claimguard.controller;
 
+import com.claimguard.domain.ActorRole;
 import com.claimguard.domain.Claim;
 import com.claimguard.dto.AuditEventResponse;
 import com.claimguard.dto.AuditVerificationResponse;
 import com.claimguard.dto.ClaimRequest;
 import com.claimguard.dto.ClaimResponse;
+import com.claimguard.dto.NarrativeAuditRequest;
 import com.claimguard.dto.TransitionRequest;
 import com.claimguard.security.AuthenticatedActor;
 import com.claimguard.service.AuditService;
@@ -85,5 +87,30 @@ public class ClaimController {
         List<AuditEventResponse> events = audit(id);
         boolean valid = auditService.verify(id);
         return new AuditVerificationResponse(valid, events.size());
+    }
+
+    /**
+     * Records an investigator narrative the frontend already fetched from
+     * the Python scoring service's POST /score/narrative as a permanent,
+     * hash-chained audit event - proof of exactly what was shown and which
+     * model produced it, not just a response that lived in a browser tab.
+     * Open like every other read/write here except transitions (see
+     * SecurityConfig): a valid bearer token, if present, names the real
+     * actor; a request with none still succeeds, attributed to no one in
+     * particular, the same way claim intake has no logged-in human behind it.
+     */
+    @PostMapping("/{id}/audit/narrative")
+    public ResponseEntity<Void> recordNarrative(@PathVariable UUID id,
+                                                 @Valid @RequestBody NarrativeAuditRequest request,
+                                                 Authentication authentication) {
+        String actorId = "anonymous";
+        ActorRole actorRole = ActorRole.SYSTEM;
+        if (authentication != null && authentication.getPrincipal() instanceof AuthenticatedActor actor) {
+            actorId = actor.username();
+            actorRole = actor.role();
+        }
+        claimService.recordNarrative(id, request.narrative(), request.grounded(), request.modelVersion(),
+                actorId, actorRole);
+        return ResponseEntity.noContent().build();
     }
 }

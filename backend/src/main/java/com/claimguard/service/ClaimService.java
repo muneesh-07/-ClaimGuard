@@ -9,13 +9,17 @@ import com.claimguard.messaging.ClaimSubmittedEvent;
 import com.claimguard.repository.ClaimAuditEventRepository;
 import com.claimguard.repository.ClaimRepository;
 import com.claimguard.workflow.ClaimTransitions;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -38,14 +42,17 @@ public class ClaimService {
     private final EntityService entityService;
     private final AuditService auditService;
     private final OutboxService outboxService;
+    private final ObjectMapper objectMapper;
 
     public ClaimService(ClaimRepository claimRepository, ClaimAuditEventRepository claimAuditEventRepository,
-                         EntityService entityService, AuditService auditService, OutboxService outboxService) {
+                         EntityService entityService, AuditService auditService, OutboxService outboxService,
+                         ObjectMapper objectMapper) {
         this.claimRepository = claimRepository;
         this.claimAuditEventRepository = claimAuditEventRepository;
         this.entityService = entityService;
         this.auditService = auditService;
         this.outboxService = outboxService;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -162,6 +169,40 @@ public class ClaimService {
 
         auditService.append(claimId, AuditEventType.FRAUD_SCORED, fromStatus, toStatus, SCORING_ACTOR_ID,
                 ActorRole.SYSTEM, null, fraudScore, ringId, explanationJson, modelVersion);
+    }
+
+    /**
+     * Records an already-generated investigator narrative (the local-LLM
+     * text from scoring/app/narrative.py, sent here once a viewer decides
+     * it's worth keeping) as a NARRATIVE_GENERATED audit event, so it gets
+     * the same tamper-evident, hash-chained treatment as every other
+     * decision on this claim - reproducible proof of exactly what an
+     * investigator read and which model version produced it, not just a
+     * response that flowed through a browser once and was gone. Never a
+     * status transition (fromStatus/toStatus are both the claim's current
+     * status): generating a narrative doesn't change what the claim IS,
+     * only what's on record about it. Reuses AuditService.append() and its
+     * existing field list unchanged - see docs/EXECUTION_PLAN.md M3 on why
+     * that list must never drift between append() and verify().
+     */
+    @Transactional
+    public void recordNarrative(UUID claimId, String narrative, boolean grounded, String modelVersion,
+                                 String actorId, ActorRole actorRole) {
+        Claim claim = claimRepository.findByIdForUpdate(claimId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Claim not found: " + claimId));
+
+        Map<String, Object> explanation = new LinkedHashMap<>();
+        explanation.put("narrative", narrative);
+        explanation.put("grounded", grounded);
+        String explanationJson;
+        try {
+            explanationJson = objectMapper.writeValueAsString(explanation);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Could not serialize narrative for the audit log", e);
+        }
+
+        auditService.append(claimId, AuditEventType.NARRATIVE_GENERATED, claim.getStatus(), claim.getStatus(),
+                actorId, actorRole, null, null, null, explanationJson, modelVersion);
     }
 
     /** Fetches one claim by id, or a 404 ProblemDetail if it doesn't exist. */

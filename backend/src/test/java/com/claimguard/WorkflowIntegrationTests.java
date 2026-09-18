@@ -7,6 +7,7 @@ import com.claimguard.dto.ClaimRequest;
 import com.claimguard.dto.ClaimResponse;
 import com.claimguard.dto.LoginRequest;
 import com.claimguard.dto.LoginResponse;
+import com.claimguard.dto.NarrativeAuditRequest;
 import com.claimguard.dto.TransitionRequest;
 import com.claimguard.security.DemoUserSeeder;
 import com.claimguard.service.ClaimService;
@@ -179,6 +180,33 @@ class WorkflowIntegrationTests {
         assertThat(last.eventType().name()).isEqualTo("HUMAN_OVERRIDE");
         assertThat(last.reason()).isNotBlank();
         assertThat(last.actorId()).isEqualTo("investigator1");
+    }
+
+    @Test
+    void recordingANarrativeAppendsAHashChainedEventAndTheChainStillVerifies() {
+        UUID claimId = createClaim();
+
+        NarrativeAuditRequest request = new NarrativeAuditRequest(
+                "Shares a phone number with two other claims filed the same week.",
+                true, "ollama:llama3.2:3b");
+        ResponseEntity<Void> response =
+                rest.postForEntity("/api/claims/{id}/audit/narrative", request, Void.class, claimId);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        ResponseEntity<AuditEventResponse[]> audit =
+                rest.getForEntity("/api/claims/{id}/audit", AuditEventResponse[].class, claimId);
+        assertThat(audit.getBody()).hasSize(2);
+        AuditEventResponse last = audit.getBody()[1];
+        assertThat(last.eventType().name()).isEqualTo("NARRATIVE_GENERATED");
+        assertThat(last.modelVersion()).isEqualTo("ollama:llama3.2:3b");
+        assertThat(last.explanationJson()).contains("Shares a phone number");
+        // Not a workflow transition - the claim's status shouldn't have moved.
+        assertThat(last.fromStatus()).isEqualTo(last.toStatus());
+
+        ResponseEntity<AuditVerificationResponse> verify =
+                rest.getForEntity("/api/claims/{id}/audit/verify", AuditVerificationResponse.class, claimId);
+        assertThat(verify.getBody().valid()).isTrue();
+        assertThat(verify.getBody().events()).isEqualTo(2);
     }
 
     @Test
