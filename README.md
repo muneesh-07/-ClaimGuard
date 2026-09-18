@@ -63,17 +63,8 @@ claimguard/
 ├── backend/   Spring Boot service — intake, workflow, audit
 ├── scoring/   FastAPI service — entity graph, ring detection
 ├── tools/     Data generators, loaders, evaluation harness
-├── infra/     docker-compose: Postgres, Kafka, Redis
-└── docs/      Design brief, execution plan, scoring contract
+└── infra/     docker-compose: Postgres, Kafka, Redis
 ```
-
-## Documentation
-
-- **[docs/APPROACH.md](docs/APPROACH.md)** — the method, why it is built this
-  way, which datasets can actually support ring detection, and the trade-offs
-  being made on purpose.
-- **[docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md)** — milestones, checklists,
-  and the acceptance test for each one.
 
 ## Quick start
 
@@ -137,4 +128,4 @@ network data*, European Actuarial Journal 2024
 together with the social network of parties involved; (2) a local generator that
 plants rings with known membership so precision and recall can be measured
 against ground truth; and (3) the real Medicare provider-fraud dataset for
-validation on non-synthetic data. See [docs/APPROACH.md](docs/APPROACH.md) §3.
+validation on non-synthetic data.

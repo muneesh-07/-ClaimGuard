@@ -5,9 +5,8 @@ and the audit log, and is the source of truth for the claims database. Fraud
 scoring lives in `../scoring/` and is reached over a versioned HTTP contract and
 Kafka events.
 
-Start here instead: the [root README](../README.md) for quick start, and
-[docs/EXECUTION_PLAN.md](../docs/EXECUTION_PLAN.md) for what is built and what
-is next.
+Start here instead: the [root README](../README.md) for quick start and current
+progress.
 
 ## Stack
 
