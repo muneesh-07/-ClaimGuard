@@ -21,6 +21,32 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 
+// --- Theme -------------------------------------------------------------
+
+// Reflects the current <html data-theme> (set synchronously by the inline script
+// in index.html's <head>, before first paint) onto the toggle button's icon.
+function syncThemeButton() {
+  const isDark = document.documentElement.dataset.theme === "dark";
+  $("theme-toggle").textContent = isDark ? "☀️" : "🌙";
+  $("theme-toggle").title = isDark ? "Switch to light theme" : "Switch to dark theme";
+}
+
+// Flips light/dark, remembers the choice in localStorage (per-browser only, never
+// sent anywhere - see the head script for why the default is light, not OS-driven).
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try {
+    localStorage.setItem("claimguard-theme", next);
+  } catch {
+    // Private browsing / blocked storage - the choice just won't survive a reload.
+  }
+  syncThemeButton();
+}
+
+syncThemeButton();
+$("theme-toggle").addEventListener("click", toggleTheme);
+
 // Wraps fetch with the JWT header (when present) and turns a non-2xx
 // response into a thrown Error carrying the backend's RFC 7807 detail text,
 // so every caller can just try/catch instead of checking response.ok itself.
@@ -273,17 +299,49 @@ function renderAuditTimeline(events) {
   list.innerHTML = "";
   for (const event of events) {
     const li = document.createElement("li");
-    const title = event.eventType === "FRAUD_SCORED"
-      ? `Fraud scored: ${Number(event.fraudScore).toFixed(4)} (ring ${event.ringId || "—"})`
-      : `${event.eventType.replaceAll("_", " ")}${event.toStatus ? ` → ${STATUS_LABELS[event.toStatus] || event.toStatus}` : ""}`;
+    let title;
+    if (event.eventType === "FRAUD_SCORED") {
+      title = `Fraud scored: ${Number(event.fraudScore).toFixed(4)} (ring ${event.ringId || "—"})`;
+    } else if (event.eventType === "NARRATIVE_GENERATED") {
+      // No " → status" suffix here on purpose - unlike every other event type, this one
+      // never moves the claim (see ClaimService.recordNarrative), so fromStatus/toStatus
+      // are always identical and showing them would read as a transition that didn't happen.
+      title = "Investigator narrative generated";
+    } else {
+      title = `${event.eventType.replaceAll("_", " ")}${event.toStatus ? ` → ${STATUS_LABELS[event.toStatus] || event.toStatus}` : ""}`;
+    }
     li.innerHTML = `
       <div class="audit-event-title">${title}</div>
       <div class="audit-event-meta">${event.actorRole} (${event.actorId}) · ${formatDateTime(event.occurredAt)}${event.reason ? ` · "${event.reason}"` : ""}</div>
       ${event.eventType === "FRAUD_SCORED" ? renderShapSection(event.explanationJson) : ""}
+      ${event.eventType === "NARRATIVE_GENERATED" ? renderNarrativeAuditSection(event.explanationJson, event.modelVersion) : ""}
       <div class="audit-event-hash" title="${event.hash}">hash ${event.hash.slice(0, 16)}&hellip;</div>
     `;
     list.appendChild(li);
   }
+}
+
+// Parses one NARRATIVE_GENERATED event's explanationJson ({narrative, grounded} - see
+// ClaimService.recordNarrative) and renders it inline in the audit timeline, so the
+// permanent record of what an investigator read is visible right where it was recorded,
+// not only in the claim detail panel's transient "Generate" result above.
+function renderNarrativeAuditSection(explanationJsonText, modelVersion) {
+  if (!explanationJsonText) return "";
+  let explanation;
+  try {
+    explanation = JSON.parse(explanationJsonText);
+  } catch {
+    return "";
+  }
+  if (!explanation.narrative) return "";
+  const badgeClass = explanation.grounded && (modelVersion || "").startsWith("ollama:")
+    ? "badge-model" : "badge-fallback";
+  return `
+    <div class="shap-section">
+      <div class="shap-title">Narrative shown to the investigator</div>
+      <p style="margin:0 0 8px;font-size:13px;line-height:1.5">${explanation.narrative}</p>
+      <span class="narrative-badge ${badgeClass}">${modelVersion || "unknown model"}</span>
+    </div>`;
 }
 
 // Parses one FRAUD_SCORED event's explanationJson and renders its FEATURE_CONTRIBUTION
@@ -335,16 +393,20 @@ function resetNarrative() {
 
 // Calls POST /score/narrative for the active claim (app/narrative.py: a local Ollama
 // model renders the claim's own SHAP + shared-entity evidence into a sentence, checked
-// against that same evidence so it can't mention a claim it wasn't shown) and renders
-// the result - or, if the model produced nothing grounded, the deterministic template
-// summary it fell back to. Either way the badge tells you honestly which one you're
-// reading, never presenting a fallback as if the model wrote it.
+// against that same evidence so it can't mention a claim it wasn't shown), renders the
+// result - or, if the model produced nothing grounded, the deterministic template
+// summary it fell back to - and then records it as a permanent, hash-chained audit
+// event (POST /api/claims/{id}/audit/narrative) exactly like a FRAUD_SCORED event:
+// what an investigator read shouldn't just live in a browser tab and vanish on refresh.
+// The audit call is best-effort - a claim still shows its narrative even if recording
+// it fails, since the narrative itself is the primary thing being asked for here.
 async function generateNarrative() {
   if (!state.activeClaimId) return;
+  const claimId = state.activeClaimId;
   resetNarrative();
   $("narrative-loading").classList.remove("hidden");
   try {
-    const result = await scoringApiPost("/score/narrative", { claim_id: state.activeClaimId });
+    const result = await scoringApiPost("/score/narrative", { claim_id: claimId });
     $("narrative-text").textContent = result.narrative;
     const usedModel = result.model_version.startsWith("ollama:");
     $("narrative-meta").innerHTML = `
@@ -353,6 +415,24 @@ async function generateNarrative() {
       </span>
       <span class="narrative-latency">${(result.generation_ms / 1000).toFixed(1)}s</span>`;
     $("narrative-result").classList.remove("hidden");
+
+    try {
+      await api(`/api/claims/${claimId}/audit/narrative`, {
+        method: "POST",
+        body: JSON.stringify({
+          narrative: result.narrative, grounded: result.grounded, modelVersion: result.model_version,
+        }),
+      });
+      // Re-renders just the timeline, not the whole detail panel - reusing
+      // loadClaimDetail()/renderClaimDetail() here would call resetNarrative()
+      // and immediately wipe the text this function just showed above.
+      if (state.activeClaimId === claimId) {
+        const events = await api(`/api/claims/${claimId}/audit`);
+        renderAuditTimeline(events);
+      }
+    } catch {
+      // Best-effort: the narrative is already shown above even if recording it failed.
+    }
   } catch (err) {
     $("narrative-error").textContent = err.message;
     $("narrative-error").classList.remove("hidden");

@@ -28,34 +28,36 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #10151b;
-    --surface: #1a222b;
-    --surface-sunken: #151b22;
-    --border: #2b3641;
-    --text: #e7ebee;
-    --text-muted: #9aa7b3;
-    --text-faint: #6f7c88;
-    --accent: #3fae97;
-    --accent-hover: #55c2ab;
-    --accent-soft: #16332c;
-    --danger: #e28880;
-    --danger-soft: #3a201e;
+/* Dark theme lives ONLY behind an explicit [data-theme="dark"] on <html> - the app
+   defaults to light regardless of OS preference (theme.js sets this on every load,
+   defaulting to "light" the first time a viewer shows up) and a header toggle lets
+   a viewer switch to dark and have that choice remembered in localStorage. */
+:root[data-theme="dark"] {
+  --bg: #10151b;
+  --surface: #1a222b;
+  --surface-sunken: #151b22;
+  --border: #2b3641;
+  --text: #e7ebee;
+  --text-muted: #9aa7b3;
+  --text-faint: #6f7c88;
+  --accent: #3fae97;
+  --accent-hover: #55c2ab;
+  --accent-soft: #16332c;
+  --danger: #e28880;
+  --danger-soft: #3a201e;
 
-    --status-submitted-fg: #b4bfc9;
-    --status-submitted-bg: #262f38;
-    --status-review-fg: #e8c079;
-    --status-review-bg: #3a2f18;
-    --status-flagged-fg: #ef9a92;
-    --status-flagged-bg: #3a201e;
-    --status-approved-fg: #7fd1a5;
-    --status-approved-bg: #163527;
-    --status-denied-fg: #e2a0b1;
-    --status-denied-bg: #3a1f28;
+  --status-submitted-fg: #b4bfc9;
+  --status-submitted-bg: #262f38;
+  --status-review-fg: #e8c079;
+  --status-review-bg: #3a2f18;
+  --status-flagged-fg: #ef9a92;
+  --status-flagged-bg: #3a201e;
+  --status-approved-fg: #7fd1a5;
+  --status-approved-bg: #163527;
+  --status-denied-fg: #e2a0b1;
+  --status-denied-bg: #3a1f28;
 
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
-  }
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
 }
 
 * { box-sizing: border-box; }
@@ -67,9 +69,20 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 15px;
   line-height: 1.5;
+  transition: background-color 0.15s, color 0.15s;
 }
 
 .hidden { display: none !important; }
+
+/* One shared transition for every themed surface, so toggling light/dark fades
+   colors smoothly instead of snapping - applied broadly rather than listed
+   selector-by-selector, since nearly everything on this page reads a --var. */
+.panel, .login-card, .model-panel, .model-panel-header, .audit-header,
+.actions-section, .audit-section, .narrative-section, .narrative-result,
+.detail-grid, .shap-section, .ring-injection-box, .claims-list li,
+input, select, .status-badge, .narrative-badge, .topbar, #session-user, .theme-toggle {
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
 
 /* Topbar */
 .topbar {
@@ -79,21 +92,32 @@ body {
   padding: 14px 28px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(23, 33, 43, 0.02), 0 4px 16px -12px rgba(23, 33, 43, 0.15);
+  position: sticky; top: 0; z-index: 10;
 }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-mark {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; border-radius: 7px;
-  background: var(--accent); color: #fff;
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(155deg, var(--accent), var(--accent-hover)); color: #fff;
   font-weight: 700; font-size: 12px; letter-spacing: 0.02em;
+  box-shadow: 0 2px 6px -1px rgba(18, 87, 76, 0.4);
 }
 .brand-name { font-weight: 650; font-size: 16px; letter-spacing: -0.01em; }
-.session-info { display: flex; align-items: center; gap: 14px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.session-info { display: flex; align-items: center; gap: 10px; }
 #session-user {
   font-size: 13px; color: var(--text-muted);
   padding: 4px 10px; background: var(--surface-sunken);
   border-radius: 20px; border: 1px solid var(--border);
 }
+.theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; padding: 0;
+  background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 20px;
+  font-size: 14px; cursor: pointer; line-height: 1;
+}
+.theme-toggle:hover { border-color: var(--accent); }
 
 /* Login */
 .login-view {
@@ -142,6 +166,7 @@ input:focus, select:focus {
   padding: 6px 12px; background: transparent;
   border: 1px solid var(--border); border-radius: 6px;
   color: var(--text); font-size: 13px; cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
 }
 .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -192,10 +217,17 @@ input:focus, select:focus {
 
 /* Detail panel */
 .empty-state {
-  display: flex; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
   min-height: 320px; color: var(--text-faint); font-size: 14px;
-  text-align: center;
+  text-align: center; gap: 10px;
 }
+.empty-state-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-sunken); border: 1px solid var(--border);
+  font-size: 22px;
+}
+.empty-state p { max-width: 260px; margin: 0; }
 .detail-header {
   display: flex; align-items: flex-start; justify-content: space-between;
   gap: 12px; margin-bottom: 18px;
@@ -204,9 +236,14 @@ input:focus, select:focus {
 .detail-header .muted { margin: 2px 0 0; }
 
 .status-badge {
-  display: inline-block; padding: 5px 12px; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 20px;
   font-size: 12px; font-weight: 700; letter-spacing: 0.03em;
   text-transform: uppercase; white-space: nowrap;
+}
+.status-badge::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; flex-shrink: 0;
 }
 .status-SUBMITTED { color: var(--status-submitted-fg); background: var(--status-submitted-bg); }
 .status-UNDER_REVIEW { color: var(--status-review-fg); background: var(--status-review-bg); }

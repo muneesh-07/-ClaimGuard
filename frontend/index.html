@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>ClaimGuard</title>
 <link rel="stylesheet" href="style.css" />
+<script>
+  // Sets the theme attribute BEFORE the stylesheet paints, so there's no flash of
+  // the wrong theme on load. Defaults to light regardless of OS preference - see
+  // theme.js's initTheme() for the toggle button that lets a viewer switch to dark.
+  (function () {
+    try {
+      document.documentElement.dataset.theme = localStorage.getItem("claimguard-theme") || "light";
+    } catch {
+      document.documentElement.dataset.theme = "light";
+    }
+  })();
+</script>
 </head>
 <body>
 
@@ -13,10 +25,13 @@
     <span class="brand-mark">CG</span>
     <span class="brand-name">ClaimGuard</span>
   </div>
-  <div id="session-info" class="session-info hidden">
-    <button id="model-info-btn" class="btn-ghost">Model &amp; Evaluation</button>
-    <span id="session-user"></span>
-    <button id="logout-btn" class="btn-ghost">Sign out</button>
+  <div class="topbar-right">
+    <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark theme"></button>
+    <div id="session-info" class="session-info hidden">
+      <button id="model-info-btn" class="btn-ghost">Model &amp; Evaluation</button>
+      <span id="session-user"></span>
+      <button id="logout-btn" class="btn-ghost">Sign out</button>
+    </div>
   </div>
 </header>
 
@@ -99,6 +114,7 @@
 
   <section class="panel detail-panel">
     <div id="empty-state" class="empty-state">
+      <div class="empty-state-icon">🔎</div>
       <p>Submit a claim, or pick one from this session, to see it here.</p>
     </div>
 
