@@ -3,8 +3,8 @@
 Synthetic claim generator with planted fraud rings and known ground truth.
 
 Real insurance fraud-network data is confidential and no public dataset has
-the shared-entity structure ring detection needs (see docs/APPROACH.md §3),
-so this script is how ClaimGuard gets labelled data to measure precision
+the shared-entity structure ring detection needs, so this script is how
+ClaimGuard gets labelled data to measure precision
 and recall against. It writes two files:
 
   claims.csv           - every claim (background + ring + camouflage),
@@ -183,7 +183,7 @@ def fuzz_address_variant(rng: random.Random, address: str) -> str:
 
 # Introduces a genuine spelling variant of a shop's suffix (per SHOP_SUFFIX_SPACING_VARIANTS)
 # - the exact gap ShopNormalizer's own docstring names as deliberately unclosed. Physical
-# shops are real and harder to fake than a phone number (per docs/APPROACH.md), but the TEXT
+# shops are real and harder to fake than a phone number, but the TEXT
 # a claimant types for one still varies between people, which is what this simulates.
 def fuzz_shop_variant(rng: random.Random, shop_name: str) -> str:
     fuzzed = shop_name
@@ -220,7 +220,7 @@ def apply_background_collisions(rng: random.Random, claims: list[GeneratedClaim]
 
 # Builds one fraud ring: `size` distinct claimant identities that all share the same phone
 # number, and usually the same repair shop and/or address - the "many claimants, few real
-# entities" fingerprint described in docs/APPROACH.md. NOT every member shares the identical
+# entities" ring fingerprint. NOT every member shares the identical
 # phone/address string: a real ring re-typing "the same" number across several claims makes
 # transposition slips, and re-typing "the same" address uses whatever city/street spelling
 # that member happens to use - fuzz_rate controls what fraction of members (after the first,

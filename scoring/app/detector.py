@@ -1,8 +1,8 @@
 """
-The ring-detector ladder from docs/APPROACH.md Layer 2: cheap-to-expensive
-rungs, run in order, with which rung fired recorded as part of the
-explanation. Each rung is independently disable-able and its
-contribution independently reportable - see tools/eval.py.
+The ring-detector ladder: cheap-to-expensive rungs, run in order, with
+which rung fired recorded as part of the explanation. Each rung is
+independently disable-able and its contribution independently
+reportable - see tools/eval.py.
 """
 
 from dataclasses import dataclass, field
@@ -14,18 +14,15 @@ DEFAULT_MIN_RING_SIZE = 3
 DEFAULT_LEIDEN_RESOLUTION = 1.2
 BURSTINESS_WINDOW_DAYS = 14
 
-# Rung 1's degree threshold, per entity type rather than one flat number, swept against
-# the real M4 ground truth rather than guessed (see docs/scoring-contract.md for the full
-# sweep). PHONE tops out at degree 12 in the real dataset (matching planted ring sizes
-# exactly) and SHOP sits uniformly above 1,000, so both are easy calls at 50. ADDRESS is
-# the hard case: its smaller combinatorial space means unrelated claims coincidentally
-# collide on one far more often than on a phone number, and letting ANY shared address
-# (threshold >= 2) contribute to Rung 1 chained background claims transitively into
-# artificially large "rings" - all-flagged precision was 0.958 at threshold=1 versus
-# 0.194 at threshold=3, for the same 100% ring recall either way. At threshold=1, a
-# degree-1 entity is a graph leaf and can never connect two different claims, so this
-# makes Rung 1 effectively phone-driven - which matches what's actually true of this
-# dataset: phone is the deterministic ring signal, address is not.
+# Rung 1's degree threshold, per entity type rather than one flat number, tuned against
+# the real dataset. PHONE tops out at degree 12 (matching planted ring sizes) and SHOP
+# sits uniformly above 1,000, so both are easy calls at 50. ADDRESS is the hard case:
+# its smaller combinatorial space makes unrelated claims coincidentally collide on one
+# far more often, and letting any shared address into Rung 1 chains background claims
+# into artificially large "rings" - precision was 0.958 at threshold=1 vs 0.194 at
+# threshold=3, for the same 100% ring recall either way. At threshold=1 a degree-1
+# entity is a graph leaf and can never connect two claims, so Rung 1 ends up effectively
+# phone-driven - matching what's actually true here: phone is the deterministic signal.
 DEFAULT_DEGREE_THRESHOLDS = {"PHONE": 50, "ADDRESS": 1, "SHOP": 50}
 FALLBACK_DEGREE_THRESHOLD = 50
 
@@ -77,9 +74,9 @@ def rung1_components(g: ig.Graph, degree_thresholds: dict[str, int] = DEFAULT_DE
     return result
 
 
-# The ring fingerprint from docs/APPROACH.md: a real ring is many claimants funnelled
-# through few real entities. A community that's mostly one claim per entity (ratio ~1)
-# is just ordinary claims that happen to touch the same handful of things - not a ring.
+# The ring fingerprint: a real ring is many claimants funnelled through few real
+# entities. A community that's mostly one claim per entity (ratio ~1) is just ordinary
+# claims that happen to touch the same handful of things - not a ring.
 def _claimants_per_entity_ratio(claim_count: int, entity_count: int) -> float:
     if entity_count == 0:
         return 0.0
@@ -102,9 +99,9 @@ def _burstiness(dates: list) -> float:
 
 # Squashes the ring-fingerprint ratio and temporal burstiness into one 0-1 suspiciousness
 # score for a community. Ratio alone can already clear the FLAG threshold - it's the
-# stronger, more specific signal (docs/APPROACH.md calls it "the ring fingerprint") and a
-# ring that files slowly over months is still a ring. Burstiness only adds confidence
-# on top; its absence must never be what keeps an obvious ring under the threshold.
+# stronger, more specific signal, and a ring that files slowly over months is still a
+# ring. Burstiness only adds confidence on top; its absence must never be what keeps an
+# obvious ring under the threshold.
 def _suspiciousness(claimants_per_entity: float, burstiness: float) -> float:
     ratio_score = min(1.0, max(0.0, (claimants_per_entity - 1.0) / 4.0))
     return round(min(1.0, 0.85 * ratio_score + 0.15 * burstiness), 4)
@@ -148,7 +145,7 @@ def rung2_leiden(g: ig.Graph, resolution: float = DEFAULT_LEIDEN_RESOLUTION,
 # Rung 3: personalized PageRank restarting from the claims Rung 1/2 already flagged -
 # propagates suspicion to claims that are NEAR a ring (share an entity with a flagged
 # claim) without being densely connected enough to land in the ring's own community.
-# This is the gap the first two rungs leave, per docs/APPROACH.md Layer 2.
+# This is the gap the first two rungs leave.
 def rung3_ppr(g: ig.Graph, seed_claim_ids: set[str], damping: float = 0.85) -> dict[str, float]:
     if not seed_claim_ids:
         return {}

@@ -1,11 +1,11 @@
 """
 Builds the bipartite claim<->entity graph this whole detector runs on.
-Bipartite, never projected to claim-claim edges - see docs/APPROACH.md
-Layer 1 for why: a shop entity touching 1,000 claims would otherwise
-become ~500,000 claim-claim edges, and the projected edge would have
-thrown away the reason it existed (the explanation IS the bipartite
-path, so keeping it is also what makes ExplanationBuilder-style code
-trivial instead of needing a second model to reconstruct "why").
+Bipartite, never projected to claim-claim edges: a shop entity touching
+1,000 claims would otherwise become ~500,000 claim-claim edges, and the
+projected edge would have thrown away the reason it existed (the
+explanation IS the bipartite path, so keeping it also makes
+explanation-building trivial instead of needing a second model to
+reconstruct "why").
 
 `as_of` exists for tools/train_model.py's temporal split: passing a
 cutoff date restricts the graph to only claims filed on or before that
@@ -60,9 +60,9 @@ def _fetch_claim_attributes(session: Session, as_of: date | None = None):
     return {str(claim_id): (float(amount), incident_date) for claim_id, amount, incident_date in rows}
 
 
-# The IDF-style hub weight from docs/APPROACH.md Layer 1: an entity shared by 3 claims is
-# strong evidence, one shared by 5,000 is almost none - this is what lets Rung 2's
-# suspiciousness scoring tell a real ring apart from a busy repair shop.
+# The IDF-style hub weight: an entity shared by 3 claims is strong evidence, one shared
+# by 5,000 is almost none - this is what lets community-suspiciousness scoring tell a
+# real ring apart from a busy repair shop.
 def idf_weight(entity_degree: int) -> float:
     return 1.0 / math.log(1 + entity_degree) if entity_degree > 0 else 0.0
 

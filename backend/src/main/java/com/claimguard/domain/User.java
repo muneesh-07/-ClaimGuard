@@ -13,7 +13,7 @@ import java.util.UUID;
  * A human who can log in and act on claims. Deliberately no
  * registration endpoint - accounts exist only via
  * {@link com.claimguard.security.DemoUserSeeder} (dev/demo) - and no
- * refresh tokens, per docs/EXECUTION_PLAN.md M8's own scope discipline.
+ * refresh tokens.
  */
 @Entity
 @Table(name = "users")

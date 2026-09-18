@@ -21,10 +21,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 /**
- * The security filter chain. Scope is deliberately narrow, per
- * docs/EXECUTION_PLAN.md M8: only POST /api/claims/{id}/transitions
- * requires authentication. Everything else - claim intake, reads, the
- * scoring endpoints - stays open, exactly like it was before M8; RBAC
+ * The security filter chain. Scope is deliberately narrow: only
+ * POST /api/claims/{id}/transitions requires authentication. Everything
+ * else - claim intake, reads, the scoring endpoints - stays open; RBAC
  * here is about *who may change a claim's workflow state*, not a
  * blanket login wall in front of the whole API.
  * <p>

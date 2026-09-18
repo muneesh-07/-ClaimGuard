@@ -29,9 +29,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * M8: login, and the specific "auditor is read-only, including
- * everything" requirement from docs/EXECUTION_PLAN.md. Role-vs-transition
- * enforcement in general is covered in WorkflowIntegrationTests.
+ * Login, plus the specific "auditor is read-only, including everything"
+ * requirement. Role-vs-transition enforcement in general is covered in
+ * WorkflowIntegrationTests.
  */
 @Testcontainers
 @SpringBootTest(

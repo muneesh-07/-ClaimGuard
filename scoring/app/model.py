@@ -80,9 +80,9 @@ class FeatureContribution:
 
 # Scores one claim: extracts its feature row, runs the calibrated model, and returns the
 # real SHAP attributions for those exact feature values (not a cached/precomputed table -
-# SHAP's TreeExplainer is fast enough, ~milliseconds, to run per request; see
-# docs/scoring-contract.md for the measured cost). Returns None for a claim with no
-# entity links, same contract as app.explain.build_score for a claim outside the graph.
+# SHAP's TreeExplainer is fast enough, ~milliseconds, to run per request). Returns None
+# for a claim with no entity links, same contract as app.explain.build_score for a claim
+# outside the graph.
 def score_claim(classifier: RingClassifier, ctx: FeatureContext,
                  claim_id: str) -> tuple[float, list[FeatureContribution]] | None:
     features = extract_features(ctx, claim_id)

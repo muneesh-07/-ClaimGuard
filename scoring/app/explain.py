@@ -1,10 +1,10 @@
 """
 Turns a claim's position in the graph into the evidence array a human
-reviewer reads. Per docs/APPROACH.md Layer 1: "the path claim A -
-[phone:+919876500011] - claim B IS the explanation" - this walks
-exactly that path, sorted so the rarest (highest-weight, most specific)
-shared entities are listed first. It is not a separate model from the
-detector; it reads the same graph the detector scored the claim on.
+reviewer reads: the path claim A - [phone:+919876500011] - claim B IS
+the explanation, so this walks exactly that path, sorted so the rarest
+(highest-weight, most specific) shared entities are listed first. It is
+not a separate model from the detector; it reads the same graph the
+detector scored the claim on.
 """
 
 import igraph as ig

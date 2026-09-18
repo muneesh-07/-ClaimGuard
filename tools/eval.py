@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Evaluates the M6 ring detector against the ground truth from
+Evaluates the ring detector against the ground truth from
 tools/gen_rings.py: ring-level recall, claim-level precision@k, and
 lift at top 1%/5%, plus the same numbers for a single-claim baseline
 (claim amount alone - no graph, no entity sharing) so the comparison
-is explicit, per docs/EXECUTION_PLAN.md M6.
+is explicit.
 
 Reuses the exact graph-building and detector code the live scoring
 service runs (app.graph, app.detector) rather than a second

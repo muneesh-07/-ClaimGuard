@@ -182,8 +182,8 @@ public class ClaimService {
      * status transition (fromStatus/toStatus are both the claim's current
      * status): generating a narrative doesn't change what the claim IS,
      * only what's on record about it. Reuses AuditService.append() and its
-     * existing field list unchanged - see docs/EXECUTION_PLAN.md M3 on why
-     * that list must never drift between append() and verify().
+     * existing field list unchanged - that list must never drift between
+     * append() and verify(), or every claim's chain silently breaks.
      */
     @Transactional
     public void recordNarrative(UUID claimId, String narrative, boolean grounded, String modelVersion,

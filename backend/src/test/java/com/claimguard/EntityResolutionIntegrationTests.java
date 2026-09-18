@@ -22,8 +22,8 @@ import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * The M2 acceptance test from docs/EXECUTION_PLAN.md: three claims whose
- * phone numbers are the same real number in three different formats must
+ * The entity-resolution acceptance test: three claims whose phone
+ * numbers are the same real number in three different formats must
  * resolve to one entities row with claim_count = 3, and that entity's
  * claims endpoint must return all three claims.
  */

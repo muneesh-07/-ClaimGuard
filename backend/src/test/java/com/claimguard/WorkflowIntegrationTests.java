@@ -35,10 +35,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Covers the M3 acceptance tests named directly in
- * docs/EXECUTION_PLAN.md: illegal transition -> 409, a fraud-flag
- * override without a reason -> 400, the chain verifies once a claim has
- * moved through a few states, and a raw SQL UPDATE against
+ * Covers the workflow acceptance tests: illegal transition -> 409, a
+ * fraud-flag override without a reason -> 400, the chain verifies once
+ * a claim has moved through a few states, and a raw SQL UPDATE against
  * claim_audit_events fails at the database. Human-actor transitions go
  * through real login (M8) rather than the old X-Actor-Id/X-Actor-Role
  * header stub; getting a claim into FLAGGED (the SYSTEM-only transition

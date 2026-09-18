@@ -1,6 +1,5 @@
--- M8 RBAC. Deliberately minimal per docs/EXECUTION_PLAN.md's own scope
--- discipline: no registration flow, no refresh tokens, no password
--- reset. Demo accounts are seeded at application startup (see
+-- RBAC. Deliberately minimal: no registration flow, no refresh tokens,
+-- no password reset. Demo accounts are seeded at application startup (see
 -- DemoUserSeeder), not with a hash literal baked into this migration -
 -- that keeps the migration itself free of anything that looks like a
 -- credential, and means the seeded password is generated through the

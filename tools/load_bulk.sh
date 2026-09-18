@@ -2,8 +2,8 @@
 # Bulk-loads a generated claims.csv into Postgres via COPY (tools/load_bulk.sql),
 # then calls POST /api/entities/resolve-backlog so the loaded claims get
 # entity links exactly the way an API-submitted claim would. This is the
-# 50k-scale path from docs/EXECUTION_PLAN.md M4 - the backend must
-# already be running (`make up && make run`) before you call this.
+# 50k-scale path - the backend must already be running
+# (`make up && make run`) before you call this.
 set -euo pipefail
 
 CSV_PATH="${1:-data/claims.csv}"

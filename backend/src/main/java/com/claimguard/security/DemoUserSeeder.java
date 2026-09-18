@@ -15,8 +15,8 @@ import java.util.UUID;
 
 /**
  * Seeds one demo account per role on first startup, since there's no
- * registration flow (docs/EXECUTION_PLAN.md M8's scope discipline).
- * Password is hashed through the real BCryptPasswordEncoder bean, not
+ * registration flow. Password is hashed through the real
+ * BCryptPasswordEncoder bean, not
  * a pre-computed literal - so it's guaranteed to verify correctly
  * against whatever encoder AuthController actually uses. Safe to run
  * on every startup: does nothing once the users table is non-empty.

@@ -19,10 +19,10 @@ public interface ClaimRepository extends JpaRepository<Claim, UUID> {
      * IDs of claims with no rows in claim_entities yet - i.e. claims that
      * were bulk-loaded straight into Postgres (COPY) rather than through
      * POST /api/claims, and so never went through EntityService at
-     * intake time. Backs the one-off resolution pass from
-     * docs/EXECUTION_PLAN.md M4. Returns IDs rather than full Claim
-     * entities on purpose: the caller processes each one in its own
-     * short-lived transaction, so nothing here should end up permanently
+     * intake time. Backs the one-off backlog resolution pass. Returns
+     * IDs rather than full Claim entities on purpose: the caller
+     * processes each one in its own short-lived transaction, so nothing
+     * here should end up permanently
      * attached to one long-lived persistence context.
      */
     @Query("select c.id from Claim c where not exists (select 1 from ClaimEntityLink l where l.id.claimId = c.id)")

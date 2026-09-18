@@ -13,8 +13,8 @@ import java.util.Map;
  * token-sorted form, so cosmetic differences - punctuation, casing, word
  * order, "Rd" vs "Road" - don't manufacture a distinct entity for what is
  * really the same address. Deliberately exact-match only: fuzzy matching
- * across genuinely different spellings is a Python batch job (see
- * docs/EXECUTION_PLAN.md D2), not this normalizer's job.
+ * across genuinely different spellings is a separate Python batch job,
+ * not this normalizer's job.
  */
 @Component
 public class AddressNormalizer {

@@ -27,9 +27,9 @@ import java.util.UUID;
  * content, so altering or deleting a past decision - even directly in
  * the database, bypassing this service entirely - breaks the chain, and
  * verify() proves that on demand. This is the project's headline
- * feature; re-read docs/EXECUTION_PLAN.md M3 before changing the hashing
- * here, since a subtly different field list between append() and
- * verify() would make every claim's chain silently "invalid" forever.
+ * feature - be careful changing the hashing here, since a subtly
+ * different field list between append() and verify() would make every
+ * claim's chain silently "invalid" forever.
  */
 @Service
 public class AuditService {
@@ -154,8 +154,7 @@ public class AuditService {
         // but Postgres normalizes the stored value to the column's declared scale,
         // so verify() re-reading the row later saw "0.0000" and produced a
         // different hash for an unchanged value. Caught by actually running the
-        // Kafka scoring pipeline and calling /audit/verify on the result - the
-        // exact "fixed numeric scale" tripwire named in docs/EXECUTION_PLAN.md M3.
+        // Kafka scoring pipeline and calling /audit/verify on the result.
         fields.put("fraudScore", fraudScore == null ? null : fraudScore.setScale(4, RoundingMode.HALF_UP).toPlainString());
         fields.put("ringId", ringId);
         // Parsed, not the raw string: explanationJson is stored in a Postgres jsonb

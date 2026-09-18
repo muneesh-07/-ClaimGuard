@@ -6,10 +6,10 @@ on-demand investigator-narrative endpoint (Tier 2, see app/narrative.py),
 and three read-only endpoints over tools/train_model.py's and
 tools/eval_narrative.py's persisted artifacts so the frontend can show
 real training/evaluation output, not a number typed into the UI by hand.
-Batch, not one-claim-per-call, per docs/EXECUTION_PLAN.md M5 - the Java
-side will eventually call /score/batch once per Kafka batch, not once
-per claim. Narrative generation is deliberately the opposite: one claim
-per call, because it runs a local LLM and takes seconds, not milliseconds.
+Batch, not one-claim-per-call: the Java side calls /score/batch once per
+Kafka batch, not once per claim. Narrative generation is deliberately
+the opposite: one claim per call, because it runs a local LLM and takes
+seconds, not milliseconds.
 """
 
 import json

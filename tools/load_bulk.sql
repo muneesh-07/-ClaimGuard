@@ -1,7 +1,7 @@
 -- Bulk-loads a generated claims.csv straight into Postgres via COPY,
--- bypassing POST /api/claims entirely - the "50k HTTP calls is a waste"
--- path from docs/EXECUTION_PLAN.md M4. Run through tools/load_bulk.sh,
--- not directly - it substitutes __CSV_PATH__ below with the real path
+-- bypassing POST /api/claims entirely - 50k individual HTTP calls would
+-- be a waste of time. Run through tools/load_bulk.sh, not directly - it
+-- substitutes __CSV_PATH__ below with the real path
 -- before invoking psql. (psql's own -v variable substitution inside
 -- \copy's filename argument is unreliable across psql client versions,
 -- so the substitution is done in the shell script instead.)

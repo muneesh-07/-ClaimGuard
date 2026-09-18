@@ -18,9 +18,7 @@ into a tree ensemble is what actually correlates with fraud-detection
 performance, not a separate learned embedding on top - this file's 1-hop/
 2-hop aggregate features are that aggregation step, done directly, rather
 than training a node2vec embedding whose signal substantially overlaps
-with degree/PPR/community features this module already computes. Recorded
-here as a deliberate, disclosed scope decision (see docs/scoring-contract.md),
-not a silent omission of what the plan asked for.
+with degree/PPR/community features this module already computes.
 """
 
 from dataclasses import dataclass

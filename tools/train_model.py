@@ -7,7 +7,7 @@ instead of the M6 detector's hardcoded fraud_score=0.9 / 0.85*ratio+0.15*burst.
 Follows GADBench's empirically-best architecture for this task (arXiv:2306.12251:
 tree ensembles over aggregated graph features beat every GNN benchmarked,
 including ones purpose-built for fraud) rather than reaching for a GNN because
-it's the fashionable choice - see docs/scoring-contract.md for why.
+it's the fashionable choice.
 
 Reports four things, all measured on a TEMPORAL split (train/val/test by
 incident_date, see tools/gen_rings.py's split_day_offsets - a random split

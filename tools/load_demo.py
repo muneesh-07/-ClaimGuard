@@ -3,8 +3,8 @@
 Loads a small slice of a generated claims.csv through the real API
 (POST /api/claims), one HTTP call per claim.
 
-This is the "small demo set" path from docs/EXECUTION_PLAN.md M4: going
-through the real endpoint exercises entity resolution and writes the
+This is the "small demo set" path: going through the real endpoint
+exercises entity resolution and writes the
 CLAIM_CREATED audit event for each claim, exactly like a real submission
 would. It does NOT scale to 50k rows - that's tools/gen_rings.py's larger
 output, which is meant for a bulk COPY plus the backend's

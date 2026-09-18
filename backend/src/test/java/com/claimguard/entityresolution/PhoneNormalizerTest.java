@@ -8,9 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * The messy real-world formats an Indian mobile number actually arrives
- * in must all collapse to the same E.164 value - this is the acceptance
- * test named directly in docs/EXECUTION_PLAN.md M2: three claims with
- * the same phone in three formats must produce one entity.
+ * in must all collapse to the same E.164 value: three claims with the
+ * same phone in three formats must produce one entity.
  */
 class PhoneNormalizerTest {
 

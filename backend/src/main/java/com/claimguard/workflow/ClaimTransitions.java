@@ -7,11 +7,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The one legal transition map for a claim's lifecycle, from
- * docs/EXECUTION_PLAN.md M3. Anything not listed here is illegal no
- * matter who asks - this is what makes "a claim cannot skip review, and
- * only an investigator can overturn a fraud flag" a provable property of
- * the code rather than an assumption baked into scattered if-statements.
+ * The one legal transition map for a claim's lifecycle. Anything not
+ * listed here is illegal no matter who asks - this is what makes "a
+ * claim cannot skip review, and only an investigator can overturn a
+ * fraud flag" a provable property of the code rather than an assumption
+ * baked into scattered if-statements.
  */
 public final class ClaimTransitions {
 

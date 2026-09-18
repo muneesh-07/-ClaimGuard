@@ -10,8 +10,8 @@ job is turning facts that already exist into a sentence a human reads
 faster than a JSON blob.
 
 Runs on an 8GB Apple Silicon laptop with llama3.2:3b (~2GB resident) -
-see docs/scoring-contract.md for the model choice and why a 7B+ model
-isn't the right fit here. Measured on that hardware: ~13s for Ollama's
+a 7B+ model would thrash on 8GB of unified memory, so it's the wrong
+fit for this hardware. Measured on that hardware: ~13s for Ollama's
 first call after a cold start (loading the model into memory), ~2-3s
 per call once it's warm - see tools/eval_narrative.py for the real,
 current numbers. Even warm, that's 100-1000x slower than the trained

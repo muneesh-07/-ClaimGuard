@@ -101,10 +101,9 @@ public class EntityService {
 
     /**
      * Runs resolveAndLink() over every claim that doesn't have entity
-     * links yet - the "one-off resolution pass" from
-     * docs/EXECUTION_PLAN.md M4, for claims that were bulk-loaded
-     * straight into Postgres via COPY (see tools/gen_rings.py) instead of
-     * through POST /api/claims. Deliberately reuses the exact same
+     * links yet - a one-off resolution pass for claims that were
+     * bulk-loaded straight into Postgres via COPY (see tools/gen_rings.py)
+     * instead of through POST /api/claims. Reuses the exact same
      * normalizers and linking logic as live intake, rather than
      * reimplementing them, so a bulk-loaded claim and an API-submitted
      * claim can never resolve differently. Safe to re-run: claims that

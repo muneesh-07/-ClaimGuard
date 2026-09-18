@@ -16,10 +16,9 @@ import java.util.Date;
 
 /**
  * Issues and verifies the JWTs that stand in for a session in this
- * stateless API. Deliberately simple per docs/EXECUTION_PLAN.md M8's
- * scope discipline: one claim ("role") beyond the standard subject/
- * issued-at/expiry, no refresh tokens, no revocation list - a token is
- * valid until it expires, full stop.
+ * stateless API. Deliberately simple: one claim ("role") beyond the
+ * standard subject/issued-at/expiry, no refresh tokens, no revocation
+ * list - a token is valid until it expires, full stop.
  */
 @Component
 public class JwtService {

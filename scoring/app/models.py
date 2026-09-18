@@ -1,11 +1,9 @@
 """
-The scoring contract - written down here AND in docs/scoring-contract.md,
-which must stay in sync. This is the versioned interface between the two
-services: Java only ever needs to trust these shapes, never the Python
-implementation behind them. Per docs/EXECUTION_PLAN.md M5, get the
-contract right before the algorithm is any good - a stub score that
-flows through this exact shape is worth more than a brilliant detector
-nothing can call.
+The scoring contract - the versioned interface between the two services.
+Java only ever needs to trust these shapes, never the Python
+implementation behind them. Get the contract right before the algorithm
+is any good: a stub score that flows through this exact shape is worth
+more than a brilliant detector nothing can call.
 """
 
 from datetime import UTC, datetime

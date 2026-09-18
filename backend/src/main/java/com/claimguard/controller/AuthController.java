@@ -16,8 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * The one login endpoint this API has - no registration, no refresh
- * tokens, per docs/EXECUTION_PLAN.md M8's scope discipline. Demo
- * accounts come from DemoUserSeeder.
+ * tokens, by design. Demo accounts come from DemoUserSeeder.
  */
 @RestController
 @RequestMapping("/api/auth")
