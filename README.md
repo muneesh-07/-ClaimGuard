@@ -116,7 +116,7 @@ a local [Ollama](https://ollama.com) daemon running with `llama3.2:3b` pulled
 | M6 | Ring detector (k-core → Leiden → personalized PageRank) | done |
 | M7 | Async scoring via transactional outbox + Kafka | done |
 | M8 | RBAC — adjuster / investigator / auditor | done |
-| M9 | Evaluation, efficiency benchmarks, final README | in progress — local-push incremental PPR + benchmark done; fuzzy entity merging, Medicare validation, nightly Leiden job, and the final metrics table are not |
+| M9 | Evaluation, efficiency benchmarks, final README | in progress — local-push incremental PPR + benchmark done, final measured-results table done; fuzzy entity merging, real (non-synthetic) data validation, and a nightly Leiden refresh job are not |
 | — | Tier 1: trained XGBoost ring classifier + SHAP, calibrated | done |
 | — | Tier 2: local-LLM investigator narrative, grounded + evaluated | done |
 | M10 | Ring visualisation | optional |
@@ -128,11 +128,40 @@ claims dataset contains the shared-entity columns that ring detection needs** �
 the commonly used Kaggle auto-insurance sets have one row per policy and no
 repeated entities, so a graph built on them has no real edges.
 
-ClaimGuard is therefore evaluated on (1) **iFraudSimulator**, the peer-reviewed
-simulation engine from Campo & Antonio, *An engine to simulate insurance fraud
-network data*, European Actuarial Journal 2024
-([arXiv:2308.11659](https://arxiv.org/abs/2308.11659)), which generates claims
-together with the social network of parties involved; (2) a local generator that
-plants rings with known membership so precision and recall can be measured
-against ground truth; and (3) the real Medicare provider-fraud dataset for
-validation on non-synthetic data.
+Every number in this README is measured on **the local synthetic generator**
+(`tools/gen_rings.py`): it plants rings with known membership so precision and
+recall can be measured against real ground truth, and it also generates
+camouflage claims and background entity collisions so the detector has to work
+for it, not just recover a trivially separable signal. It is explicitly
+synthetic data, disclosed as such — no claim here is presented as real.
+
+**Not yet done, disclosed honestly rather than silently skipped:** validating
+against real, non-synthetic data. The credible next step is
+**iFraudSimulator**, the peer-reviewed simulation engine from Campo & Antonio,
+*An engine to simulate insurance fraud network data*, European Actuarial
+Journal 2024 ([arXiv:2308.11659](https://arxiv.org/abs/2308.11659)), which
+generates claims together with the social network of parties involved — it
+exists precisely because real fraud-network data is confidential, i.e. it's
+the published answer to this exact problem, not a Kaggle substitute. A second
+option is the real Medicare provider-fraud dataset, for validation on
+non-synthetic (if not insurance-specific) data. Neither is wired up yet; see
+the Progress table above.
+
+## Measured results
+
+Every number below is reproduced by the command in its row — nothing here is
+typed in by hand. Full reports live at `scoring/models/eval_report.json` and
+`scoring/models/narrative_eval_report.json`.
+
+| Metric | Result | Command |
+|---|---|---|
+| Ring-level recall | **140/140 rings (100%)** recovered as a single cluster | `make eval` |
+| Precision@50 | **0.98** (43.5x lift over the 2.25% base rate) | `make eval` |
+| Single-claim baseline, same cutoff | 0.00 precision — the case for a network-based detector | `make eval` |
+| AUPRC, tabular-only (no graph) | 0.0338 | `make train-model` |
+| AUPRC, + graph features | **0.887** | `make train-model` |
+| Recall on held-out rings (never seen in training) | 5.7% (tabular) → **87.3%** (+ graph) | `make train-model` |
+| Local-push PPR vs. full rebuild, 200k claims | **up to 1,016x faster** | `make bench-incremental` |
+| Narrative grounding rate | **100%** (20/20 real FLAGged claims) | `make eval-narrative` |
+| Narrative latency | median 3.2s / p95 5.1s | `make eval-narrative` |
+| Automated tests | 46 backend (Testcontainers) + 42 scoring (pytest) = **88** | `make test`, `cd scoring && uv run pytest` |
