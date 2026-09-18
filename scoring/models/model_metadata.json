@@ -1,6 +1,6 @@
 {
-  "model_version": "xgboost-ring-classifier-1.0.0",
-  "trained_at": "2026-09-17T16:13:05.076797+00:00",
+  "model_version": "xgboost-ring-classifier-1.1.0",
+  "trained_at": "2026-09-18T06:13:07.453311+00:00",
   "features": [
     "claim_amount",
     "day_of_week",
@@ -39,6 +39,6 @@
     "leiden_suspiciousness",
     "ppr_score"
   ],
-  "flag_threshold": 0.26,
+  "flag_threshold": 0.31,
   "review_threshold": 0.01
 }

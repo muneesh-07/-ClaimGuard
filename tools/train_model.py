@@ -25,6 +25,22 @@ actually arrives):
   4. Persisted artifacts (scoring/models/) the live service loads at
      startup - see app/scoring.py.
 
+Temporal leak, found and fixed: an earlier version of this file built ONE
+graph over every claim (train, val, and test periods all at once) and only
+split the resulting FEATURE ROWS by date afterward - so a train-period
+claim's graph-derived features (component_size, leiden_community_size,
+ppr_score, two_hop_claim_count, ...) were computed from a graph that
+already contained that claim's own future ring-mates, who in reality
+hadn't been filed yet. That's not how fraud arrives, and it's exactly the
+kind of leak temporal splitting is supposed to prevent - the split was
+right, the FEATURES computed for it weren't. build_dataset() now builds
+THREE graphs via app.graph.build_graph's `as_of` parameter (one frozen at
+the train/val boundary, one at the val/test boundary, one unrestricted for
+test) and takes each split's rows from its own as-of graph, never a later
+one. The ablation numbers in scoring/models/eval_report.json are from
+AFTER this fix; see the git history for the inflated numbers this
+replaced, and don't trust any number measured before it.
+
 Run with: cd scoring && uv run python ../tools/train_model.py
 """
 
@@ -54,7 +70,7 @@ from app.graph import build_graph  # noqa: E402
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 MODELS_DIR = Path(__file__).resolve().parent.parent / "scoring" / "models"
-MODEL_VERSION = "xgboost-ring-classifier-1.0.0"
+MODEL_VERSION = "xgboost-ring-classifier-1.1.0"  # 1.1.0: fixed the temporal graph leak, see module docstring
 OPERATING_K_VALUES = (50, 100, 500)
 
 
@@ -73,21 +89,44 @@ def load_held_out_ring_ids(path: Path) -> set[str]:
 
 # Builds the full feature+label dataset: one row per claim, ALL_FEATURES as columns,
 # plus incident_date (for the temporal split) and label (1 if a genuine ring member).
+# Reads each split's rows from ITS OWN as-of graph (see module docstring) - train rows
+# from g_train, val rows from g_val filtered down to the val-only period (g_val also
+# contains the train period, needed to compute val claims' 2-hop/community features
+# correctly, but its recomputed train-period rows are discarded - g_train's version of
+# them is authoritative), and test rows from g_full filtered to the test-only period.
+# This nesting relies on one fact: a claim's OWN entity links never depend on `as_of`,
+# only on its own incident_date, so g_train's claim set is always exactly a subset of
+# g_val's, which is always exactly a subset of g_full's - a claim can only ever be
+# picked up once, by the first (earliest-cutoff) graph its own date qualifies it for.
 def build_dataset(ground_truth: dict[str, str]) -> tuple[pd.DataFrame, dict]:
+    train_end_day, val_end_day = gen_rings.split_day_offsets()
+    train_end_date = gen_rings.EPOCH + timedelta(days=train_end_day)
+    val_end_date = gen_rings.EPOCH + timedelta(days=val_end_day)
+
     session = SessionLocal()
     try:
         t0 = time.perf_counter()
-        g = build_graph(session)
-        print(f"Graph built in {time.perf_counter() - t0:.2f}s "
-              f"({g.vcount():,} vertices, {g.ecount():,} edges)")
+        g_train = build_graph(session, as_of=train_end_date)
+        g_val = build_graph(session, as_of=val_end_date)
+        g_full = build_graph(session)
+        print(f"Graphs built in {time.perf_counter() - t0:.2f}s - "
+              f"train {g_train.vcount():,}v/{g_train.ecount():,}e, "
+              f"val {g_val.vcount():,}v/{g_val.ecount():,}e, "
+              f"full {g_full.vcount():,}v/{g_full.ecount():,}e")
 
         t0 = time.perf_counter()
-        feature_rows = extract_features_bulk(g)
-        print(f"Features extracted in {time.perf_counter() - t0:.2f}s "
-              f"({len(feature_rows):,} claims)")
+        train_rows = extract_features_bulk(g_train)
+        val_rows = {cid: feats for cid, feats in extract_features_bulk(g_val).items()
+                    if cid not in train_rows}
+        test_rows = {cid: feats for cid, feats in extract_features_bulk(g_full).items()
+                     if cid not in train_rows and cid not in val_rows}
+        feature_rows = {**train_rows, **val_rows, **test_rows}
+        print(f"Features extracted in {time.perf_counter() - t0:.2f}s - "
+              f"{len(train_rows):,} train / {len(val_rows):,} val / {len(test_rows):,} test "
+              f"({len(feature_rows):,} total)")
 
         incident_dates = {}
-        for v in g.vs:
+        for v in g_full.vs:
             if v["kind"] == "claim":
                 d = v["incident_date"]
                 incident_dates[v["name"]] = d.isoformat() if hasattr(d, "isoformat") else d

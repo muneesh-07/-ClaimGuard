@@ -38,10 +38,17 @@ Three layers, cheapest-and-most-certain first:
 2. **Trained ring classifier** (`scoring/app/model.py`, `tools/train_model.py`) —
    a calibrated XGBoost model over graph-derived features (k-core, Leiden,
    PPR, IDF hub weighting, 2-hop aggregation) plus the tabular claim fields,
-   explained per-prediction with real SHAP attributions. `make train-model`
-   reports a measured ablation: **AUPRC 0.0338 (tabular-only, no graph) →
-   0.8907 (+ graph features)** — the actual, measured case for why this is a
-   *network*-based detector and not a single-claim scorer. Full report at
+   explained per-prediction with real SHAP attributions. Trained on a
+   **temporal split with three separate as-of graphs** (`app.graph.build_graph`'s
+   `as_of` parameter) — train-period claims never see graph features computed
+   from a graph that already contains their own future ring-mates, which an
+   earlier version of this file did, inflating its numbers; see
+   `tools/train_model.py`'s module docstring for the leak and the fix.
+   `make train-model` reports the post-fix, honest ablation: **AUPRC 0.0338
+   (tabular-only, no graph) → 0.887 (+ graph features)** — the actual,
+   measured case for why this is a *network*-based detector and not a
+   single-claim scorer, confirmed stable after closing the leak (barely
+   moved from the pre-fix 0.891). Full report at
    `scoring/models/eval_report.json`.
 3. **Investigator narrative** (`scoring/app/narrative.py`) — a **local**
    `llama3.2:3b` model (via [Ollama](https://ollama.com), free, runs on an 8GB
