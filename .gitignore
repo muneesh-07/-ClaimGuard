@@ -40,3 +40,6 @@ data/
 # scoring contract, learning notes) - kept locally for the repo owner,
 # not part of the public project.
 docs/
+
+# AI-assistant project instructions - not part of the public project.
+CLAUDE.md
