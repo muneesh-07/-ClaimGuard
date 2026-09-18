@@ -129,10 +129,14 @@ def _build_prompt(score: ClaimScore) -> str:
 
 # Calls the local Ollama server with the narrative model, constrained to
 # NARRATIVE_RESPONSE_SCHEMA. Returns None (never raises) on any failure -
-# Ollama not running, the model not pulled, a timeout - since every caller
-# already has a safe fallback (the deterministic template summary) and a
-# missing local model is a legitimate, expected state, not a bug to surface
-# as a 500 to whoever clicked "generate narrative."
+# Ollama not running, the model not pulled, a timeout, or a response that
+# technically parses as JSON but doesn't actually match the schema (a
+# `format` constraint narrows what a model is LIKELY to return, it doesn't
+# guarantee it - a `narrative` field that's null, a number, or a list is
+# still a schema violation this has to handle, not trust) - since every
+# caller already has a safe fallback (the deterministic template summary)
+# and a missing/misbehaving local model is a legitimate, expected state,
+# not a bug to surface as a 500 to whoever clicked "generate narrative."
 def _call_ollama(prompt: str) -> str | None:
     try:
         response = httpx.post(
@@ -148,7 +152,10 @@ def _call_ollama(prompt: str) -> str | None:
         )
         response.raise_for_status()
         content = response.json()["message"]["content"]
-        return json.loads(content)["narrative"].strip()
+        narrative = json.loads(content)["narrative"]
+        if not isinstance(narrative, str):
+            raise ValueError(f"'narrative' field was {type(narrative).__name__}, not a string")
+        return narrative.strip()
     except (httpx.HTTPError, KeyError, ValueError):
         return None
 
