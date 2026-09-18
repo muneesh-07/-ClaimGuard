@@ -1,0 +1,38 @@
+{
+  "sample_size": 20,
+  "narrative_model": "ollama:llama3.2:3b",
+  "grounded_rate": 1.0,
+  "fallback_rate": 0.0,
+  "latency_ms": {
+    "mean": 3223.4,
+    "median": 3187.7,
+    "p95": 5085.3
+  },
+  "sample_narratives": [
+    {
+      "claim_id": "736e2179-da15-44fe-9b43-401e60ea5c2d",
+      "narrative": "This claim has a high fraud score of 0.98 due to its connections with other claims. The entity associated with this claim shares addresses and phone numbers with multiple other entities, indicating potential coordination or involvement in fraudulent activity. These shared connections, combined with the model's features, push the score toward flagging as fraudulent.",
+      "grounded": true
+    },
+    {
+      "claim_id": "feb5e0f6-f70b-4a20-9a51-efacc459fec1",
+      "narrative": "This claim has been flagged for further investigation due to its high association with other suspicious claims. The entity associated with this claim shares a phone number and address with multiple other claims, indicating potential coordination or commonality among these entities. Additionally, the model features suggest that the claim's characteristics are more indicative of fraud.",
+      "grounded": true
+    },
+    {
+      "claim_id": "1671ca7d-5498-4bd4-9d0b-50fbe742ed17",
+      "narrative": "The claim with ID 1671ca7d-5498-4bd4-9d0b-50fbe742ed17 has a high fraud score of 0.98, indicating a strong indication of potential fraud. The entity associated with this claim shares phone numbers and shops with multiple other claims, suggesting possible connections to other fraudulent activities. Further investigation is recommended.",
+      "grounded": true
+    },
+    {
+      "claim_id": "49a18787-6516-4c6a-9803-ccd31839c70e",
+      "narrative": "This claim has a high fraud score of 0.98 due to its connections with other suspicious claims. The entity associated with this claim shares addresses, phones, and shops with numerous other claims, indicating potential coordination or involvement in fraudulent activity. These shared connections, combined with specific model features, push the score toward fraud.",
+      "grounded": true
+    },
+    {
+      "claim_id": "6b162fe9-aa27-42ea-8ea8-9edcfb06e16b",
+      "narrative": "This claim has a high fraud score of 0.90 due to its connections with other claims. The entity associated with this claim shares phone numbers and shops with multiple other entities, indicating potential coordination or involvement in fraudulent activity. This evidence suggests that the claimant may be involved in a larger scheme.",
+      "grounded": true
+    }
+  ]
+}

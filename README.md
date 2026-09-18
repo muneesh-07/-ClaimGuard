@@ -27,6 +27,35 @@ work. They communicate over a versioned HTTP contract and Kafka events, and the
 Python service holds **read-only** database credentials so "Java owns writes" is
 enforced by Postgres rather than by convention.
 
+## AI / ML components
+
+Three layers, cheapest-and-most-certain first:
+
+1. **Rule-based ring detector** (`scoring/app/detector.py`) — k-core components →
+   Leiden community detection → personalized PageRank, run in that order as a
+   cheap-to-expensive ladder. `make eval` reports ring-level recall and
+   precision@k against the planted ground truth.
+2. **Trained ring classifier** (`scoring/app/model.py`, `tools/train_model.py`) —
+   a calibrated XGBoost model over graph-derived features (k-core, Leiden,
+   PPR, IDF hub weighting, 2-hop aggregation) plus the tabular claim fields,
+   explained per-prediction with real SHAP attributions. `make train-model`
+   reports a measured ablation: **AUPRC 0.0338 (tabular-only, no graph) →
+   0.8907 (+ graph features)** — the actual, measured case for why this is a
+   *network*-based detector and not a single-claim scorer. Full report at
+   `scoring/models/eval_report.json`.
+3. **Investigator narrative** (`scoring/app/narrative.py`) — a **local**
+   `llama3.2:3b` model (via [Ollama](https://ollama.com), free, runs on an 8GB
+   Apple Silicon laptop) turns a flagged claim's real SHAP + shared-entity
+   evidence into a short, investigator-readable sentence, on demand from the
+   claim detail view. It never decides anything — fraud_score/ring_id/
+   decision_hint are already final by the time a claim reaches it — and every
+   narrative is checked against its own evidence before being shown: if it
+   mentions a claim id it wasn't given, it's discarded and the deterministic
+   template summary is shown instead. `make eval-narrative` measures how often
+   that actually happens; on the last run, **20/20 (100%) of real FLAGged
+   claims passed the grounding check**, median latency 3.2s / p95 5.1s. Full
+   report at `scoring/models/narrative_eval_report.json`.
+
 ## Layout
 
 ```
@@ -72,7 +101,9 @@ curl -X POST localhost:8080/api/claims \
   }'
 ```
 
-`make help` lists the rest.
+`make help` lists the rest. The investigator-narrative feature additionally needs
+a local [Ollama](https://ollama.com) daemon running with `llama3.2:3b` pulled
+(`ollama pull llama3.2:3b`) — everything else works without it.
 
 ## Progress
 
@@ -87,7 +118,9 @@ curl -X POST localhost:8080/api/claims \
 | M6 | Ring detector (k-core → Leiden → personalized PageRank) | done |
 | M7 | Async scoring via transactional outbox + Kafka | done |
 | M8 | RBAC — adjuster / investigator / auditor | done |
-| M9 | Evaluation, efficiency benchmarks, final README | not started |
+| M9 | Evaluation, efficiency benchmarks, final README | in progress — local-push incremental PPR + benchmark done; fuzzy entity merging, Medicare validation, nightly Leiden job, and the final metrics table are not |
+| — | Tier 1: trained XGBoost ring classifier + SHAP, calibrated | done |
+| — | Tier 2: local-LLM investigator narrative, grounded + evaluated | done |
 | M10 | Ring visualisation | optional |
 
 ## A note on data

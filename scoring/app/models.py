@@ -90,6 +90,28 @@ class ScoreBatchResponse(BaseModel):
     results: list[ClaimScore]
 
 
+class NarrativeRequest(BaseModel):
+    """What a caller sends to generate an investigator narrative: one claim id
+    at a time (unlike /score/batch), since narrative generation runs a local
+    LLM and takes seconds, not milliseconds - see app.narrative."""
+
+    claim_id: UUID
+
+
+class NarrativeResponse(BaseModel):
+    """What a caller gets back: the narrative text, whether it passed the
+    grounding check (app.narrative._is_grounded) or fell back to the
+    deterministic template summary, which model actually produced it, and
+    how long generation took - real, measured fields, not decoration."""
+
+    claim_id: UUID
+    narrative: str
+    grounded: bool
+    model_version: str
+    generation_ms: float
+    generated_at: datetime
+
+
 # The version string stamped on every score this stub produces. Bump this
 # whenever the scoring logic changes - it's what an audit row would
 # record as "which model produced this decision" once M7 wires scoring

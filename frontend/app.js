@@ -210,6 +210,7 @@ function renderClaimDetail(claim, auditEvents) {
 
   renderActions(claim);
   renderAuditTimeline(auditEvents);
+  resetNarrative();
 
   // Keep the session-list copy of this claim's status in sync so the
   // sidebar reflects a flag that just arrived via polling.
@@ -321,6 +322,45 @@ function renderShapSection(explanationJsonText) {
     </div>`;
 }
 
+// Clears any previously generated narrative when the active claim changes, so
+// switching from a flagged claim to a clean one never leaves the last claim's
+// text on screen looking like it belongs to the new one.
+function resetNarrative() {
+  $("narrative-result").classList.add("hidden");
+  $("narrative-loading").classList.add("hidden");
+  $("narrative-error").classList.add("hidden");
+  $("narrative-text").textContent = "";
+  $("narrative-meta").textContent = "";
+}
+
+// Calls POST /score/narrative for the active claim (app/narrative.py: a local Ollama
+// model renders the claim's own SHAP + shared-entity evidence into a sentence, checked
+// against that same evidence so it can't mention a claim it wasn't shown) and renders
+// the result - or, if the model produced nothing grounded, the deterministic template
+// summary it fell back to. Either way the badge tells you honestly which one you're
+// reading, never presenting a fallback as if the model wrote it.
+async function generateNarrative() {
+  if (!state.activeClaimId) return;
+  resetNarrative();
+  $("narrative-loading").classList.remove("hidden");
+  try {
+    const result = await scoringApiPost("/score/narrative", { claim_id: state.activeClaimId });
+    $("narrative-text").textContent = result.narrative;
+    const usedModel = result.model_version.startsWith("ollama:");
+    $("narrative-meta").innerHTML = `
+      <span class="narrative-badge ${usedModel ? "badge-model" : "badge-fallback"}">
+        ${usedModel ? result.model_version : "template fallback (model output wasn't grounded)"}
+      </span>
+      <span class="narrative-latency">${(result.generation_ms / 1000).toFixed(1)}s</span>`;
+    $("narrative-result").classList.remove("hidden");
+  } catch (err) {
+    $("narrative-error").textContent = err.message;
+    $("narrative-error").classList.remove("hidden");
+  } finally {
+    $("narrative-loading").classList.add("hidden");
+  }
+}
+
 // --- Wiring ------------------------------------------------------------
 
 $("login-form").addEventListener("submit", async (e) => {
@@ -366,6 +406,8 @@ $("verify-btn").addEventListener("click", () => {
   if (state.activeClaimId) verifyChain(state.activeClaimId);
 });
 
+$("narrative-btn").addEventListener("click", generateNarrative);
+
 // --- Model & Evaluation panel ------------------------------------------
 
 // Fetches a real, unauthenticated GET from the Python scoring service (a separate
@@ -377,6 +419,21 @@ async function scoringApi(path) {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.detail || `${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
+// The POST counterpart of scoringApi, used only by /score/narrative - the one scoring-
+// service call this frontend makes that isn't a plain artifact read.
+async function scoringApiPost(path, body) {
+  const res = await fetch(`${SCORING_API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const problem = await res.json().catch(() => ({}));
+    throw new Error(problem.detail || `${res.status} ${res.statusText}`);
   }
   return res.json();
 }
@@ -449,8 +506,41 @@ function renderRingInjection(ri) {
     </div>`;
 }
 
-// Loads /model/metadata and /model/eval-report and renders the full panel. Called each
-// time the panel is opened, so it always reflects whatever tools/train_model.py last wrote.
+// Renders tools/eval_narrative.py's persisted report: grounded rate, fallback rate, and
+// latency over a real sample of FLAGged claims - real numbers from the last
+// `make eval-narrative` run, same discipline as the ablation table above. Returns an
+// empty string (not an error) when no report exists yet, since that's a legitimate
+// "haven't run it on this checkout" state, not a failure of the rest of the panel.
+function renderNarrativeEval(report) {
+  if (!report) {
+    return `<h3>Investigator narrative (local LLM)</h3>
+      <p class="muted">No narrative evaluation yet - run <code>make eval-narrative</code>.</p>`;
+  }
+  return `
+    <h3>Investigator narrative (local LLM, llama3.2:3b)</h3>
+    <p class="muted" style="margin-bottom:12px">
+      ${report.sample_size} real FLAGged claims, each narrative checked against its own
+      evidence for invented claim ids before being shown to an investigator.
+    </p>
+    <div class="ring-injection-box">
+      <div class="ri-card">
+        <div class="ri-label">Grounded rate</div>
+        <div class="ri-value good">${(report.grounded_rate * 100).toFixed(0)}%</div>
+        <div class="ri-sub">${report.fallback_rate > 0
+          ? `${(report.fallback_rate * 100).toFixed(0)}% fell back to the template`
+          : "0 fell back to the template"}</div>
+      </div>
+      <div class="ri-card">
+        <div class="ri-label">Latency (median / p95)</div>
+        <div class="ri-value">${(report.latency_ms.median / 1000).toFixed(1)}s / ${(report.latency_ms.p95 / 1000).toFixed(1)}s</div>
+        <div class="ri-sub">on-demand, one claim at a time</div>
+      </div>
+    </div>`;
+}
+
+// Loads /model/metadata, /model/eval-report, and (best-effort) /narrative/eval-report,
+// and renders the full panel. Called each time the panel is opened, so it always
+// reflects whatever tools/train_model.py and tools/eval_narrative.py last wrote.
 async function openModelPanel() {
   $("model-panel-backdrop").classList.remove("hidden");
   const body = $("model-panel-body");
@@ -460,6 +550,10 @@ async function openModelPanel() {
       scoringApi("/model/metadata"),
       scoringApi("/model/eval-report"),
     ]);
+    // Narrative eval is fetched separately and tolerantly - a checkout that has trained
+    // the Tier 1 model but never run `make eval-narrative` should still see the rest of
+    // this panel, not a blank error screen for an unrelated, optional report.
+    const narrativeReport = await scoringApi("/narrative/eval-report").catch(() => null);
     body.innerHTML = `
       <div class="model-meta-row">
         <div><dt>Model version</dt><dd>${metadata.model_version}</dd></div>
@@ -471,6 +565,7 @@ async function openModelPanel() {
       ${renderAblationTable(report.ablation)}
       <h3>Ring-injection ablation (held-out, never-seen rings)</h3>
       ${renderRingInjection(report.ring_injection_ablation)}
+      ${renderNarrativeEval(narrativeReport)}
     `;
   } catch (err) {
     body.innerHTML = `<p class="error-text">${err.message}</p>`;

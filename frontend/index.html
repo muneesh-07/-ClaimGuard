@@ -142,6 +142,25 @@
         </div>
         <ol id="audit-timeline" class="audit-timeline"></ol>
       </div>
+
+      <div class="narrative-section">
+        <div class="narrative-header">
+          <h3>Investigator narrative</h3>
+          <button id="narrative-btn" class="btn-ghost">Generate</button>
+        </div>
+        <p class="muted narrative-hint">
+          Written by a local Ollama model (llama3.2:3b) from this claim's own evidence only,
+          then checked to make sure it didn't invent any claim it wasn't shown.
+        </p>
+        <p id="narrative-loading" class="narrative-loading hidden">
+          <span class="spinner"></span> Generating locally&hellip; (a few seconds)
+        </p>
+        <div id="narrative-result" class="narrative-result hidden">
+          <p id="narrative-text"></p>
+          <div id="narrative-meta" class="narrative-meta"></div>
+        </div>
+        <p id="narrative-error" class="error-text hidden"></p>
+      </div>
     </div>
   </section>
 

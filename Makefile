@@ -4,7 +4,7 @@ MVN     := cd backend && ./mvnw
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs ps build test run clean gen-data load-bulk score-serve score-consume eval bench-incremental frontend train-model
+.PHONY: help up down logs ps build test run clean gen-data load-bulk score-serve score-consume eval bench-incremental frontend train-model eval-narrative
 
 help: ## Show this help
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -55,6 +55,9 @@ train-model: ## Train the Tier 1 XGBoost ring classifier + ablation report (need
 
 bench-incremental: ## Benchmark local-push PPR vs. a full graph rebuild at increasing scale (in-memory, no infra needed)
 	cd scoring && uv run python ../tools/benchmark_incremental.py
+
+eval-narrative: ## Evaluate the local-LLM narrative generator's grounded rate + latency (needs `make up` + a running `ollama serve` with llama3.2:3b pulled)
+	cd scoring && uv run python ../tools/eval_narrative.py
 
 frontend: ## Serve the minimal frontend on :5500 (needs the backend running for it to do anything)
 	cd frontend && python3 -m http.server 5500
